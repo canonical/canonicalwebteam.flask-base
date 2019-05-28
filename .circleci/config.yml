@@ -1,0 +1,35 @@
+version: 2
+
+defaults: &defaults
+  docker:
+    - image: canonicalwebteam/dev
+  working_directory: /srv
+
+jobs:
+  lint-python:
+    <<: *defaults
+    steps:
+      - checkout
+      - run:
+          name: Lint webapp with Flake8 and black
+          command: flake8 canonicalwebteam tests && black --line-length 79 --check canonicalwebteam tests
+  test-python:
+    <<: *defaults
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            apt install -yy python3-venv
+            pip3 install poetry==0.12.15
+            poetry install
+      - run:
+          name: Run Python tests
+          command: poetry run python -m unittest discover tests
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - lint-python
+      - test-python
