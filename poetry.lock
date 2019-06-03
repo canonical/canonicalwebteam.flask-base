@@ -1,0 +1,212 @@
+[[package]]
+category = "main"
+description = "Functions to read from yaml files to providegeneric responses to URLs in Django and Flask"
+name = "canonicalwebteam.yaml-responses"
+optional = false
+python-versions = "*"
+version = "1.1.1"
+
+[package.dependencies]
+flask = "*"
+pyyaml = "*"
+yamlloader = "*"
+
+[[package]]
+category = "main"
+description = "Python package for providing Mozilla's CA Bundle."
+name = "certifi"
+optional = false
+python-versions = "*"
+version = "2019.3.9"
+
+[[package]]
+category = "main"
+description = "Universal encoding detector for Python 2 and 3"
+name = "chardet"
+optional = false
+python-versions = "*"
+version = "3.0.4"
+
+[[package]]
+category = "main"
+description = "A simple wrapper around optparse for powerful command line utilities."
+name = "click"
+optional = false
+python-versions = "*"
+version = "6.7"
+
+[[package]]
+category = "main"
+description = "A simple framework for building complex web applications."
+name = "flask"
+optional = false
+python-versions = "*"
+version = "1.0.2"
+
+[package.dependencies]
+Jinja2 = ">=2.10"
+Werkzeug = ">=0.14"
+click = ">=5.1"
+itsdangerous = ">=0.24"
+
+[[package]]
+category = "main"
+description = "Clean single-source support for Python 3 and 2"
+name = "future"
+optional = false
+python-versions = "*"
+version = "0.16.0"
+
+[[package]]
+category = "main"
+description = "WSGI HTTP Server for UNIX"
+marker = "extra == \"gunicorn\""
+name = "gunicorn"
+optional = false
+python-versions = "*"
+version = "19.7.1"
+
+[[package]]
+category = "main"
+description = "Internationalized Domain Names in Applications (IDNA)"
+name = "idna"
+optional = false
+python-versions = "*"
+version = "2.6"
+
+[[package]]
+category = "main"
+description = "IPv4/IPv6 manipulation library"
+marker = "python_version < \"3.3\""
+name = "ipaddress"
+optional = false
+python-versions = "*"
+version = "1.0.22"
+
+[[package]]
+category = "main"
+description = "Various helpers to pass trusted data to untrusted environments and back."
+name = "itsdangerous"
+optional = false
+python-versions = "*"
+version = "0.24"
+
+[[package]]
+category = "main"
+description = "A small but fast and easy to use stand-alone template engine written in pure python."
+name = "jinja2"
+optional = false
+python-versions = "*"
+version = "2.10.1"
+
+[package.dependencies]
+MarkupSafe = ">=0.23"
+
+[[package]]
+category = "main"
+description = "Implements a XML/HTML/XHTML Markup safe string for Python"
+name = "markupsafe"
+optional = false
+python-versions = "*"
+version = "1.0"
+
+[[package]]
+category = "main"
+description = "YAML parser and emitter for Python"
+name = "pyyaml"
+optional = false
+python-versions = "*"
+version = "3.13"
+
+[[package]]
+category = "main"
+description = "Python HTTP for Humans."
+name = "requests"
+optional = false
+python-versions = "*"
+version = "2.18.4"
+
+[package.dependencies]
+certifi = ">=2017.4.17"
+chardet = ">=3.0.2,<3.1.0"
+idna = ">=2.5,<2.7"
+urllib3 = ">=1.21.1,<1.23"
+
+[[package]]
+category = "main"
+description = "A simple statsd client."
+name = "statsd"
+optional = false
+python-versions = "*"
+version = "3.3.0"
+
+[[package]]
+category = "main"
+description = "A common WSGI stack"
+name = "talisker"
+optional = false
+python-versions = "*"
+version = "0.14.3"
+
+[package.dependencies]
+Werkzeug = ">=0.10.4,<0.15"
+future = ">=0.15.2,<0.17"
+gunicorn = ">=19.7.0,<20.0"
+requests = ">=2.16.0,<3.0"
+statsd = ">=3.2.1,<4.0"
+
+[package.dependencies.ipaddress]
+python = "<3.3"
+version = ">=1.0.16,<2.0"
+
+[[package]]
+category = "main"
+description = "HTTP library with thread-safe connection pooling, file post, and more."
+name = "urllib3"
+optional = false
+python-versions = "*"
+version = "1.22"
+
+[[package]]
+category = "main"
+description = "The comprehensive WSGI web application library."
+name = "werkzeug"
+optional = false
+python-versions = "*"
+version = "0.14.1"
+
+[[package]]
+category = "main"
+description = "Ordered YAML loader and dumper for PyYAML."
+name = "yamlloader"
+optional = false
+python-versions = ">=2.7"
+version = "0.5.5"
+
+[package.dependencies]
+pyyaml = "*"
+
+[metadata]
+content-hash = "00692d55a463fbee0fc44b54c766d07b0beb3160783abcc417d9df4b85b3df95"
+python-versions = "^3"
+
+[metadata.hashes]
+"canonicalwebteam.yaml-responses" = ["ed04c8055252ae94f1cfbf519a7d09414a535f427d49fe0e73b40201d74924e8"]
+certifi = ["59b7658e26ca9c7339e00f8f4636cdfe59d34fa37b9b04f6f9e9926b3cece1a5", "b26104d6835d1f5e49452a26eb2ff87fe7090b89dfcaee5ea2212697e1e1d7ae"]
+chardet = ["84ab92ed1c4d4f16916e05906b6b75a6c0fb5db821cc65e70cbd64a3e2a5eaae", "fc323ffcaeaed0e0a02bf4d117757b98aed530d9ed4531e3e15460124c106691"]
+click = ["29f99fc6125fbc931b758dc053b3114e55c77a6e4c6c3a2674a2dc986016381d", "f15516df478d5a56180fbf80e68f206010e6d160fc39fa508b65e035fd75130b"]
+flask = ["2271c0070dbcb5275fad4a82e29f23ab92682dc45f9dfbc22c02ba9b9322ce48", "a080b744b7e345ccfcbc77954861cb05b3c63786e93f2b3875e0913d44b43f05"]
+future = ["e39ced1ab767b5936646cedba8bcce582398233d6a627067d4c6a454c90cfedb"]
+gunicorn = ["75af03c99389535f218cc596c7de74df4763803f7b63eb09d77e92b3956b36c6", "eee1169f0ca667be05db3351a0960765620dad53f53434262ff8901b68a1b622"]
+idna = ["2c6a5de3089009e3da7c5dde64a141dbc8551d5b7f6cf4ed7c2568d0cc520a8f", "8c7309c718f94b3a625cb648ace320157ad16ff131ae0af362c9f21b80ef6ec4"]
+ipaddress = ["64b28eec5e78e7510698f6d4da08800a5c575caa4a286c93d651c5d3ff7b6794", "b146c751ea45cad6188dd6cf2d9b757f6f4f8d6ffb96a023e6f2e26eea02a72c"]
+itsdangerous = ["cbb3fcf8d3e33df861709ecaf89d9e6629cff0a217bc2848f1b41cd30d360519"]
+jinja2 = ["065c4f02ebe7f7cf559e49ee5a95fb800a9e4528727aec6f24402a5374c65013", "14dd6caf1527abb21f08f86c784eac40853ba93edb79552aa1e4b8aef1b61c7b"]
+markupsafe = ["a6be69091dac236ea9c6bc7d012beab42010fa914c459791d627dad4910eb665"]
+pyyaml = ["3d7da3009c0f3e783b2c873687652d83b1bbfd5c88e9813fb7e5b03c0dd3108b", "3ef3092145e9b70e3ddd2c7ad59bdd0252a94dfe3949721633e41344de00a6bf", "40c71b8e076d0550b2e6380bada1f1cd1017b882f7e16f09a65be98e017f211a", "558dd60b890ba8fd982e05941927a3911dc409a63dcb8b634feaa0cda69330d3", "a7c28b45d9f99102fa092bb213aa12e0aaf9a6a1f5e395d36166639c1f96c3a1", "aa7dd4a6a427aed7df6fb7f08a580d68d9b118d90310374716ae90b710280af1", "bc558586e6045763782014934bfaf39d48b8ae85a2713117d16c39864085c613", "d46d7982b62e0729ad0175a9bc7e10a566fc07b224d2c79fafb5e032727eaa04", "d5eef459e30b09f5a098b9cea68bebfeb268697f78d647bd255a085371ac7f3f", "e01d3203230e1786cd91ccfdc8f8454c8069c91bee3962ad93b87a4b2860f537", "e170a9e6fcfd19021dd29845af83bb79236068bf5fd4df3327c1be18182b2531"]
+requests = ["6a1b267aa90cac58ac3a765d067950e7dbbf75b1da07e895d1f594193a40a38b", "9c443e7324ba5b85070c4a818ade28bfabedf16ea10206da1132edaa6dda237e"]
+statsd = ["c610fb80347fca0ef62666d241bce64184bd7cc1efe582f9690e045c25535eaa", "e3e6db4c246f7c59003e51c9720a51a7f39a396541cb9b147ff4b14d15b5dd1f"]
+talisker = ["100d088ddfe5e9fd482a43eaf72862de083d2a8d1621c06a894ae038b33e52fa", "1099b8814f262fb296dff88437f4aa418b0f8b83fa0a76ca6d4c1e3ba73780ec", "afc373e6a64b4c89c9cf0d4225ea2f8a2646ddd2fbc962deb06f3b9f608e757f"]
+urllib3 = ["06330f386d6e4b195fbfc736b297f58c5a892e4440e54d294d7004e3a9bbea1b", "cc44da8e1145637334317feebd728bd869a35285b93cbb4cca2577da7e62db4f"]
+werkzeug = ["c3fd7a7d41976d9f44db327260e263132466836cef6f91512889ed60ad26557c", "d5da73735293558eb1651ee2fddc4d0dedcfa06538b8813a2e20011583c9e49b"]
+yamlloader = ["814c39f5f5c4e2d201e8421f4869221dcba0561fc30857d4437395b5e50b3162", "dcab5f16b39bb03d10dda4cd4f30c943675ec4c7771807fc67e7f1bb319bf4c8"]
