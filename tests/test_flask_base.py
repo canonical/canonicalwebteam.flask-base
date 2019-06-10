@@ -65,6 +65,19 @@ class TestFlaskBase(unittest.TestCase):
                 msg="Test", extra={"service": "canonicalwebteam.flask-base"}
             )
 
+    def test_global_context(self):
+        app = self.create_app()
+        context_processors = app.template_context_processors[None]
+
+        # Flask adds it's own context_processor so we should have 2
+        self.assertEqual(len(context_processors), 2)
+
+        # We retrieve our base context from the second position
+        base_context = context_processors[1]()
+
+        self.assertIn("now", base_context.keys())
+        self.assertIn("versioned_static", base_context.keys())
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -4,6 +4,7 @@ import talisker.flask
 from werkzeug.contrib.fixers import ProxyFix
 from werkzeug.debug import DebuggedApplication
 
+from canonicalwebteam.flask_base.context import base_context
 from canonicalwebteam.flask_base.converters import RegexConverter
 from canonicalwebteam.yaml_responses.flask_helpers import (
     prepare_deleted,
@@ -40,6 +41,8 @@ class FlaskBase(flask.Flask):
 
         self.before_request(prepare_redirects)
         self.before_request(prepare_deleted)
+
+        self.context_processor(base_context)
 
         talisker.flask.register(self)
         talisker.logs.set_global_extra({"service": self.service})
