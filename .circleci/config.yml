@@ -20,8 +20,9 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            apt install -yy python3-venv
-            pip3 install poetry==0.12.15
+            apt-get update
+            apt-get install -y python3-venv
+            pip3 install poetry
             poetry install
       - run:
           name: Run Python tests
