@@ -1,15 +1,30 @@
+# Standard library
 import os
 import unittest
+from contextlib import contextmanager
 
+# Packages
+import flask
 import talisker.testing
 from werkzeug.contrib.fixers import ProxyFix
 from werkzeug.debug import DebuggedApplication
 
+# Local modules
 from canonicalwebteam.flask_base.app import FlaskBase
-from canonicalwebteam.yaml_responses.flask_helpers import (
-    prepare_deleted,
-    prepare_redirects,
-)
+
+
+@contextmanager
+def cwd(path):
+    """
+    Context manager for temporarily changing directory
+    """
+
+    oldpwd = os.getcwd()
+    os.chdir(path)
+    try:
+        yield
+    finally:
+        os.chdir(oldpwd)
 
 
 class TestFlaskBase(unittest.TestCase):
@@ -34,28 +49,21 @@ class TestFlaskBase(unittest.TestCase):
         self.assertIsInstance(app.wsgi_app, ProxyFix)
 
     def test_adds_redirects(self):
-        def _deleted_callback(context):
-            return "Deleted", 410
+        with cwd("tests/test-app"):
+            os.environ["FLASK_DEBUG"] = "True"
+            app = FlaskBase(__name__, "canonicalwebteam.flask-base")
+            app.root_path = os.getcwd()
 
-        p_deleted = prepare_deleted(
-            path="./tests/deleted.yaml", view_callback=_deleted_callback
-        )
-        p_redirects = prepare_redirects(path="./tests/redirects.yaml")
+            with app.test_client() as client:
+                response = client.get("redirect")
+                self.assertEqual(302, response.status_code)
+                self.assertEqual(
+                    response.headers.get("Location"), "https://httpbin.org/"
+                )
 
-        app = FlaskBase(
-            __name__, "canonicalwebteam.flask-base", p_deleted, p_redirects
-        )
-
-        with app.test_client() as client:
-            response = client.get("redirect")
-            self.assertEqual(302, response.status_code)
-            self.assertEqual(
-                response.headers.get("Location"), "https://httpbin.org/"
-            )
-
-            response = client.get("deleted")
-            self.assertEqual(410, response.status_code)
-            self.assertEqual(response.data, b"Deleted")
+                response = client.get("deleted")
+                self.assertEqual(410, response.status_code)
+                self.assertEqual(response.data, b"Deleted")
 
     def test_logs_service_name(self):
         with talisker.testing.TestContext() as ctx:
@@ -77,6 +85,121 @@ class TestFlaskBase(unittest.TestCase):
 
         self.assertIn("now", base_context.keys())
         self.assertIn("versioned_static", base_context.keys())
+
+    def test_favicon_redirect(self):
+        """
+        If `favicon_url` is provided, check requests to `/favicon.ico`
+        receive a redirect
+        """
+
+        external_url = "https://example.com/icos/favcon"
+        local_url = "/static/some-image.ico"
+
+        external_app = FlaskBase(
+            __name__, "canonicalwebteam.flask-base", favicon_url=external_url
+        )
+        local_app = FlaskBase(
+            __name__, "canonicalwebteam.flask-base", favicon_url=local_url
+        )
+
+        with external_app.test_client() as client:
+            response = client.get("/favicon.ico")
+            self.assertEqual(302, response.status_code)
+            self.assertEqual(response.headers.get("Location"), external_url)
+
+        with local_app.test_client() as client:
+            response = client.get("/favicon.ico")
+            self.assertEqual(302, response.status_code)
+            self.assertEqual(
+                response.headers.get("Location"),
+                "http://localhost" + local_url,
+            )
+
+    def test_robots_redirect(self):
+        """
+        If `robots_url` is provided, check requests to `/robots.txt`
+        receive a redirect
+        """
+
+        external_url = "https://example.com/files/robots"
+        local_url = "/static/robo.txt"
+
+        external_app = FlaskBase(
+            __name__, "canonicalwebteam.flask-base", favicon_url=external_url
+        )
+        local_app = FlaskBase(
+            __name__, "canonicalwebteam.flask-base", favicon_url=local_url
+        )
+
+        with external_app.test_client() as client:
+            response = client.get("/favicon.ico")
+            self.assertEqual(302, response.status_code)
+            self.assertEqual(response.headers.get("Location"), external_url)
+
+        with local_app.test_client() as client:
+            response = client.get("/favicon.ico")
+            self.assertEqual(302, response.status_code)
+            self.assertEqual(
+                response.headers.get("Location"),
+                "http://localhost" + local_url,
+            )
+
+    def test_humans_redirect(self):
+        """
+        If `humans_url` is provided, check requests to `/humans.txt`
+        receive a redirect
+        """
+
+        external_url = "https://example.com/files/humans"
+        local_url = "/static/people.txt"
+
+        external_app = FlaskBase(
+            __name__, "canonicalwebteam.flask-base", favicon_url=external_url
+        )
+        local_app = FlaskBase(
+            __name__, "canonicalwebteam.flask-base", favicon_url=local_url
+        )
+
+        with external_app.test_client() as client:
+            response = client.get("/favicon.ico")
+            self.assertEqual(302, response.status_code)
+            self.assertEqual(response.headers.get("Location"), external_url)
+
+        with local_app.test_client() as client:
+            response = client.get("/favicon.ico")
+            self.assertEqual(302, response.status_code)
+            self.assertEqual(
+                response.headers.get("Location"),
+                "http://localhost" + local_url,
+            )
+
+    def test_error_pages(self):
+        """
+        If "404.html" and "500.html" are provided as templates,
+        check we get the response from those templates when we get an error
+        """
+
+        with cwd("tests/test-app"):
+            app = FlaskBase(
+                __name__,
+                "canonicalwebteam.flask-base",
+                template_404="404.html",
+                template_500="500.html",
+            )
+            app.root_path = os.getcwd()
+
+            @app.route("/error")
+            def error_route():
+                flask.abort(500)
+
+            with app.test_client() as client:
+                response = client.get("non-existent-page")
+                self.assertEqual(404, response.status_code)
+                self.assertEqual(response.data, b"error 404")
+
+                response = client.get("error")
+                self.assertEqual(500, response.status_code)
+                self.assertEqual(response.data, b"error 500")
 
 
 if __name__ == "__main__":
