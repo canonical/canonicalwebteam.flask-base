@@ -41,7 +41,11 @@ class FlaskBase(flask.Flask):
         if self.debug:
             self.wsgi_app = DebuggedApplication(self.wsgi_app)
 
-        self.before_request(prepare_redirects())
+        self.before_request(
+            prepare_redirects(
+                path=os.path.join(self.root_path, "..", "redirects.yaml")
+            )
+        )
         self.before_request(
             prepare_redirects(
                 path=os.path.join(
@@ -50,7 +54,11 @@ class FlaskBase(flask.Flask):
                 permanent=True,
             )
         )
-        self.before_request(prepare_deleted())
+        self.before_request(
+            prepare_deleted(
+                path=os.path.join(self.root_path, "..", "deleted.yaml")
+            )
+        )
 
         self.context_processor(base_context)
 
