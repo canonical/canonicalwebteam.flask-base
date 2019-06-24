@@ -24,8 +24,6 @@ class FlaskBase(flask.Flask):
         favicon_url=None,
         template_404=None,
         template_500=None,
-        robots_url=None,
-        humans_url=None,
         *args,
         **kwargs
     ):
@@ -44,6 +42,14 @@ class FlaskBase(flask.Flask):
             self.wsgi_app = DebuggedApplication(self.wsgi_app)
 
         self.before_request(prepare_redirects())
+        self.before_request(
+            prepare_redirects(
+                path=os.path.join(
+                    self.root_path, "..", "permanent-redirects.yaml"
+                ),
+                permanent=True,
+            )
+        )
         self.before_request(prepare_deleted())
 
         self.context_processor(base_context)
@@ -71,14 +77,17 @@ class FlaskBase(flask.Flask):
             def favicon():
                 return flask.redirect(favicon_url)
 
-        if robots_url:
+        robots_path = os.path.join(self.root_path, "..", "robots.txt")
+        humans_path = os.path.join(self.root_path, "..", "humans.txt")
+
+        if os.path.isfile(robots_path):
 
             @self.route("/robots.txt")
             def robots():
-                return flask.redirect(robots_url)
+                return flask.send_file(robots_path)
 
-        if humans_url:
+        if os.path.isfile(humans_path):
 
             @self.route("/humans.txt")
             def humans():
-                return flask.redirect(humans_url)
+                return flask.send_file(humans_path)

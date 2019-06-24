@@ -21,8 +21,6 @@ app = FlaskBase(
     template_404="404.html",
     template_500="500.html",
     favicon_url="/static/favicon.ico",
-    robots_url="/static/robots.txt",
-    humans_url="/static/humans.txt"
 )
 ```
 
@@ -30,7 +28,7 @@ app = FlaskBase(
 
 ### Redirects and deleted paths
 
-FlaskBase uses [yaml-responses](https://github.com/canonical-web-and-design/canonicalwebteam.yaml-responses) to allow easy configuration of redirects and return of deleted responses, by creating `redirects.yaml` and `deleted.yaml` in the site root directory.
+FlaskBase uses [yaml-responses](https://github.com/canonical-web-and-design/canonicalwebteam.yaml-responses) to allow easy configuration of redirects and return of deleted responses, by creating `redirects.yaml`, `permanent-redirects.yaml` and `deleted.yaml` in the site root directory.
 
 ### Error templates
 
@@ -47,7 +45,7 @@ app = FlaskBase(
 
 This will lead to e.g. `http://localhost/non-existent-path` returning a `404` status with the contents of `templates/404.html`.
 
-### Redirects for common paths
+### Redirect /favicon.ico
 
 `FlaskBase` can optionally provide redirects for the commonly queried paths `/favicon.ico`, `/robots.txt` and `/humans.txt` to sensible locations:
 
@@ -66,6 +64,10 @@ app = FlaskBase(
 ```
 
 This will lead to e.g. `http://localhost/favicon.ico` returning a `302` redirect to `http://localhost/static/favicon.ico`.
+
+### `robots.txt` and `humans.txt`
+
+If you create a `robots.txt` or `humans.txt` in the root of your project, these will be served at `/robots.txt` and `/humans.txt` respectively.
 
 ## Generating setup.py
 
