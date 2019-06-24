@@ -67,6 +67,15 @@ app = FlaskBase(
 
 This will lead to e.g. `http://localhost/favicon.ico` returning a `302` redirect to `http://localhost/static/favicon.ico`.
 
+## Generating setup.py
+
+In this project, for the time being, we maintain both a `pyproject.toml` for Poetry and a `setup.py` for traditional Python tooling. If you are developing on the module, you should update `pyproject.toml` first and then regenerate the `setup.py` using:
+
+``` bash
+poetry install
+poetry run poetry-setup
+```
+
 ## Tests
 
 To run the tests execute `poetry run python -m unittest discover tests`.
