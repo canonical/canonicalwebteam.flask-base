@@ -1,5 +1,3 @@
-#! /usr/bin/env python3
-
 """A setuptools based setup module.
 See:
 https://packaging.python.org/en/latest/distributing.html
@@ -50,7 +48,6 @@ setup(
         'canonicalwebteam.yaml-responses[flask] (>=1.1,<2.0)',
         'flask (==1.0.2)',
         'talisker[gunicorn,flask,prometheus,raven] (==0.14.3)',
-        'poetry-setup (>=0.3.6,<0.4.0)',
     ],  # Optional
     # https://setuptools.readthedocs.io/en/latest/setuptools.html#dependencies-that-aren-t-in-pypi
     dependency_links=[],  # Optional
