@@ -8,9 +8,9 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.6"
-"canonicalwebteam.yaml-responses" = {version = "^1.1", extras = ["flask"]}
-flask = "1.0.2"
-talisker = {version = "0.14.3", extras = ["gunicorn", "flask", "prometheus", "raven"]}
+"canonicalwebteam.yaml-responses" = {version = "^1", extras = ["flask"]}
+flask = "^1"
+talisker = {version = "^0.14", extras = ["gunicorn", "flask", "prometheus", "raven"]}
 
 [tool.poetry.dev-dependencies]
 black = { version = "*", allows-prereleases = true }
