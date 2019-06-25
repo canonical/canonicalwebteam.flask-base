@@ -1,9 +1,9 @@
 import os
-
-from hashlib import md5
 from datetime import datetime
+from hashlib import md5
+from urllib.parse import unquote, urlparse, urlunparse
 
-from flask import current_app
+from flask import current_app, redirect, request
 
 
 def now(format):
@@ -38,3 +38,18 @@ def versioned_static(filename):
 
 def base_context():
     return dict(now=now, versioned_static=versioned_static)
+
+
+def clear_trailing_slash():
+    """
+    Remove trailing slashes from all routes
+    We like our URLs without slashes
+    """
+
+    parsed_url = urlparse(unquote(request.url))
+    path = parsed_url.path
+
+    if path != "/" and path.endswith("/"):
+        new_uri = urlunparse(parsed_url._replace(path=path[:-1]))
+
+        return redirect(new_uri)

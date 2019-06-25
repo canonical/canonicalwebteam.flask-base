@@ -157,6 +157,20 @@ class TestFlaskBase(unittest.TestCase):
             self.assertEqual(500, response.status_code)
             self.assertEqual(response.data, b"error 500")
 
+    def test_clear_trailing_slash(self):
+        with create_test_app().test_client() as client:
+            response = client.get("/")
+            self.assertEqual(200, response.status_code)
+
+            response = client.get("/page")
+            self.assertEqual(200, response.status_code)
+
+            response = client.get("/page/")
+            self.assertEqual(302, response.status_code)
+            self.assertEqual(
+                "http://localhost/page", response.headers.get("Location")
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -8,7 +8,10 @@ from werkzeug.contrib.fixers import ProxyFix
 from werkzeug.debug import DebuggedApplication
 
 # Local modules
-from canonicalwebteam.flask_base.context import base_context
+from canonicalwebteam.flask_base.context import (
+    base_context,
+    clear_trailing_slash,
+)
 from canonicalwebteam.flask_base.converters import RegexConverter
 from canonicalwebteam.yaml_responses.flask_helpers import (
     prepare_deleted,
@@ -40,6 +43,8 @@ class FlaskBase(flask.Flask):
 
         if self.debug:
             self.wsgi_app = DebuggedApplication(self.wsgi_app)
+
+        self.before_request(clear_trailing_slash)
 
         self.before_request(
             prepare_redirects(

@@ -14,6 +14,11 @@ def create_test_app():
         template_500="500.html",
     )
 
+    @app.route("/")
+    @app.route("/page")
+    def page():
+        return "page"
+
     @app.route("/error")
     def error_route():
         flask.abort(500)
