@@ -39,10 +39,10 @@ class FlaskBase(flask.Flask):
         self.url_map.strict_slashes = False
         self.url_map.converters["regex"] = RegexConverter
 
-        self.wsgi_app = ProxyFix(self.wsgi_app)
-
         if self.debug:
             self.wsgi_app = DebuggedApplication(self.wsgi_app)
+
+        self.wsgi_app = ProxyFix(self.wsgi_app)
 
         self.before_request(clear_trailing_slash)
 
