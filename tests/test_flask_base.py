@@ -6,7 +6,7 @@ from contextlib import contextmanager
 
 # Packages
 import talisker.testing
-from werkzeug.contrib.fixers import ProxyFix
+from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.debug import DebuggedApplication
 
 # Local modules
@@ -46,7 +46,7 @@ class TestFlaskBase(unittest.TestCase):
 
     def test_debug_wsgi_app(self):
         app = self.create_app(debug=True)
-        self.assertIsInstance(app.wsgi_app, DebuggedApplication)
+        self.assertIsInstance(app.wsgi_app.app, DebuggedApplication)
 
     def test_wsgi_app(self):
         app = self.create_app()

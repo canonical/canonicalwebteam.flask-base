@@ -4,7 +4,7 @@ import os
 # Packages
 import flask
 import talisker.flask
-from werkzeug.contrib.fixers import ProxyFix
+from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.debug import DebuggedApplication
 
 # Local modules
