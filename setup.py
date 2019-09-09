@@ -47,7 +47,7 @@ setup(
     install_requires=[
         'canonicalwebteam.yaml-responses[flask] (>=1,<2)',
         'flask (>=1,<2)',
-        'talisker[gunicorn,flask,prometheus,raven] (>=0.14,<0.15)',
+        'talisker[gunicorn,flask,prometheus,raven] (>=0.15,<0.16)',
     ],  # Optional
     # https://setuptools.readthedocs.io/en/latest/setuptools.html#dependencies-that-aren-t-in-pypi
     dependency_links=[],  # Optional

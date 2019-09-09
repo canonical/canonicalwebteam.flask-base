@@ -10,7 +10,7 @@ readme = "README.md"
 python = "^3.6"
 "canonicalwebteam.yaml-responses" = {version = "^1", extras = ["flask"]}
 flask = "^1"
-talisker = {version = "^0.14", extras = ["gunicorn", "flask", "prometheus", "raven"]}
+talisker = {version = "^0.15", extras = ["gunicorn", "flask", "prometheus", "raven"]}
 
 [tool.poetry.dev-dependencies]
 black = { version = "*", allows-prereleases = true }
