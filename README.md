@@ -87,3 +87,4 @@ poetry run poetry-setup
 ## Tests
 
 To run the tests execute `poetry run python -m unittest discover tests`.
+
