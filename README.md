@@ -65,6 +65,12 @@ app = FlaskBase(
 
 This will lead to e.g. `http://localhost/favicon.ico` returning a `302` redirect to `http://localhost/static/favicon.ico`.
 
+### Jinja2 helpers
+
+You get two jinja2 helpers to use in your templates from flask-base:
+- `now` is a function that outputs the current date in the passed [format](https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes) - `{{ now('%Y') }}` -> `YYYY`
+- `versioned_static` is a function that fingerprints the passed asset - `{{ versioned_static('asset.js') }}` -> `static/asset?v=asset-hash`
+
 ### `robots.txt` and `humans.txt`
 
 If you create a `robots.txt` or `humans.txt` in the root of your project, these will be served at `/robots.txt` and `/humans.txt` respectively.
