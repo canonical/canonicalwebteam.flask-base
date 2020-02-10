@@ -1,3 +1,9 @@
+# 0.4.0 (2020-02-10)
+
+### Added
+Set cache headers for all responses, overridable in the view.
+
+
 # 0.2.0 (2019-06-10)
 
 ### Features
