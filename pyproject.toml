@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "canonicalwebteam.flask_base"
-version = "0.3.3"
+version = "0.4"
 description = ""
 authors = ["Canonical webteam <webteam@canonical.com>"]
 packages = [{ include = "canonicalwebteam" }]

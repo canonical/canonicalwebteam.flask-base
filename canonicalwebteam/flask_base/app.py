@@ -19,6 +19,19 @@ from canonicalwebteam.yaml_responses.flask_helpers import (
 )
 
 
+def set_cache_control_headers(response):
+    if flask.request.path.startswith("/_status"):
+        response.cache_control.no_store = True
+        response.cache_control.max_age = 0
+    elif not response.cache_control:
+        # response.cache_control does not support stale_while_revalidate so...
+        response.headers[
+            "Cache-Control"
+        ] = "public, max-age=300, stale-while-revalidate=360"
+
+    return response
+
+
 class FlaskBase(flask.Flask):
     def __init__(
         self,
@@ -65,6 +78,8 @@ class FlaskBase(flask.Flask):
             )
         )
 
+        self.after_request(set_cache_control_headers)
+
         self.context_processor(base_context)
 
         talisker.flask.register(self)
@@ -84,6 +99,10 @@ class FlaskBase(flask.Flask):
                 return flask.render_template(template_500), 500
 
         # Default routes
+        @self.route("/_status/check")
+        def status_check():
+            return os.getenv("TALISKER_REVISION_ID", "OK")
+
         if favicon_url:
 
             @self.route("/favicon.ico")

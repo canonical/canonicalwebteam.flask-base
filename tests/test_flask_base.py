@@ -52,6 +52,39 @@ class TestFlaskBase(unittest.TestCase):
         app = self.create_app()
         self.assertIsInstance(app.wsgi_app, ProxyFix)
 
+    def test_default_cache_headers(self):
+        with create_test_app().test_client() as client:
+            cached_response = client.get("page")
+            self.assertEqual(
+                cached_response.headers.get("Cache-Control"),
+                "public, max-age=300, stale-while-revalidate=360",
+            )
+
+    def test_vary_cookie_when_session(self):
+        with create_test_app().test_client() as client:
+            cached_response_with_session = client.get("auth")
+            self.assertEqual(
+                cached_response_with_session.headers.get("Vary"), "Cookie"
+            )
+
+    def test_cache_does_not_overide(self):
+        with create_test_app().test_client() as client:
+            cached_response = client.get("cache")
+            self.assertEqual(
+                cached_response.headers.get("Cache-Control"),
+                "public, max-age=1000",
+            )
+
+    def test_status_endpoints(self):
+        with create_test_app().test_client() as client:
+            os.environ["TALISKER_REVISION_ID"] = "a-build-id"
+            response = client.get("_status/check")
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.data.decode(), "a-build-id")
+            self.assertEqual(
+                response.headers.get("Cache-Control"), "no-store, max-age=0"
+            )
+
     def test_redirects_deleted(self):
         """
         Check test_app/{redirects,permanent-redirects,deleted}.yaml

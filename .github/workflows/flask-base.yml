@@ -13,7 +13,7 @@ jobs:
         python-version: 3.6
         
     - name: Install dependencies
-      run: pip install black flake8
+      run: pip3 install black flake8
 
     - name: Flake
       run: flake8 canonicalwebteam tests
@@ -31,12 +31,8 @@ jobs:
         python-version: 3.6
         
     - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install poetry
-        poetry config settings.virtualenvs.create false
-        poetry install
+      run: pip3 install .
 
     - name: Test
-      run: python -m unittest discover tests
+      run: python3 -m unittest discover tests
 
