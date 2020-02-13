@@ -32,11 +32,6 @@ def create_test_app():
 
         return response, 200
 
-    @app.route("/_status/test")
-    @app.route("/_status/check")
-    def status():
-        return "_status", 200
-
     @app.route("/error")
     def error_route():
         flask.abort(500)

@@ -99,6 +99,10 @@ class FlaskBase(flask.Flask):
                 return flask.render_template(template_500), 500
 
         # Default routes
+        @self.route("/_status/check")
+        def status_check():
+            return os.getenv("TALISKER_REVISION_ID", "OK")
+
         if favicon_url:
 
             @self.route("/favicon.ico")

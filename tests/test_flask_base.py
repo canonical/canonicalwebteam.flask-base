@@ -75,14 +75,12 @@ class TestFlaskBase(unittest.TestCase):
                 "public, max-age=1000",
             )
 
-    def test_status_endpoints_no_cache(self):
+    def test_status_endpoints(self):
         with create_test_app().test_client() as client:
+            os.environ["TALISKER_REVISION_ID"] = "a-build-id"
             response = client.get("_status/check")
-            self.assertEqual(
-                response.headers.get("Cache-Control"), "no-store, max-age=0"
-            )
-
-            response = client.get("_status/test")
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.data.decode(), "a-build-id")
             self.assertEqual(
                 response.headers.get("Cache-Control"), "no-store, max-age=0"
             )
