@@ -1,22 +1,38 @@
 [tool.poetry]
-name = "canonicalwebteam.flask_base"
-version = "0.4"
-description = ""
-authors = ["Canonical webteam <webteam@canonical.com>"]
-packages = [{ include = "canonicalwebteam" }]
-readme = "README.md"
+name = 'canonicalwebteam.flask_base'
+version = '0.4.0'
+description = ''
+authors = ['Canonical webteam <webteam@canonical.com>']
+readme = 'README.md'
+
+[[tool.poetry.packages]]
+include = 'canonicalwebteam'
 
 [tool.poetry.dependencies]
-python = "^3.6"
-"canonicalwebteam.yaml-responses" = {version = "^1", extras = ["flask"]}
-flask = "^1"
-talisker = {version = "^0.15", extras = ["gunicorn", "flask", "prometheus", "raven"]}
+python = '^3.6'
+flask = '^1'
+
+[tool.poetry.dependencies."canonicalwebteam.yaml-responses"]
+version = '^1'
+extras = ['flask']
+
+[tool.poetry.dependencies.talisker]
+version = '^0.15'
+extras = [
+    'gunicorn',
+    'flask',
+    'prometheus',
+    'raven',
+]
 
 [tool.poetry.dev-dependencies]
-black = { version = "*", allows-prereleases = true }
-flake8 = "*"
-poetry-setup = "*"
+flake8 = '*'
+poetry-setup = '*'
+
+[tool.poetry.dev-dependencies.black]
+version = '*'
+allow-prereleases = true
 
 [build-system]
-requires = ["poetry>=0.12"]
-build-backend = "poetry.masonry.api"
+requires = ['poetry>=0.12']
+build-backend = 'poetry.masonry.api'
