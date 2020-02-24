@@ -23,7 +23,7 @@ def set_cache_control_headers(response):
     if flask.request.path.startswith("/_status"):
         response.cache_control.no_store = True
         response.cache_control.max_age = 0
-    elif not response.cache_control:
+    elif not response.cache_control and response.status_code == 200:
         # response.cache_control does not support stale_while_revalidate so...
         response.headers[
             "Cache-Control"
