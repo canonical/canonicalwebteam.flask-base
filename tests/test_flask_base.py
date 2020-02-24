@@ -60,6 +60,13 @@ class TestFlaskBase(unittest.TestCase):
                 "public, max-age=300, stale-while-revalidate=360",
             )
 
+    def test_redirects_have_no_cache_headers(self):
+        with create_test_app().test_client() as client:
+            soft_redirect = client.get("soft-redirect")
+            hard_redirect = client.get("hard-redirect")
+            self.assertTrue("Cache-Control" not in soft_redirect.headers)
+            self.assertTrue("Cache-Control" not in hard_redirect.headers)
+
     def test_vary_cookie_when_session(self):
         with create_test_app().test_client() as client:
             cached_response_with_session = client.get("auth")

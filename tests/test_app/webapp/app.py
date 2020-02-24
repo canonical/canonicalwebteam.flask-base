@@ -24,6 +24,16 @@ def create_test_app():
         flask.session["test"] = True
         return "auth", 200
 
+    @app.route("/hard-redirect")
+    def hard_redirect():
+        flask.session["test"] = True
+        return "Moved Permanently", 301
+
+    @app.route("/soft-redirect")
+    def soft_redirect():
+        flask.session["test"] = True
+        return "Found", 302
+
     @app.route("/cache")
     def cache():
         response = flask.make_response()
