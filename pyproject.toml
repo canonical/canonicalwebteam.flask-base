@@ -1,6 +1,6 @@
 [tool.poetry]
 name = 'canonicalwebteam.flask_base'
-version = '0.4.1'
+version = '0.4.2'
 description = ''
 authors = ['Canonical webteam <webteam@canonical.com>']
 readme = 'README.md'
@@ -11,6 +11,7 @@ include = 'canonicalwebteam'
 [tool.poetry.dependencies]
 python = '^3.6'
 flask = '^1'
+Werkzeug = '>= 0.15, < 0.16'
 
 [tool.poetry.dependencies."canonicalwebteam.yaml-responses"]
 version = '^1'
