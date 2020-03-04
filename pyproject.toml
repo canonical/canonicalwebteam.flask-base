@@ -11,14 +11,14 @@ include = 'canonicalwebteam'
 [tool.poetry.dependencies]
 python = '^3.6'
 flask = '^1'
-Werkzeug = '>= 0.15, < 0.16'
+Werkzeug = "< 1.1"
 
 [tool.poetry.dependencies."canonicalwebteam.yaml-responses"]
 version = '^1'
 extras = ['flask']
 
 [tool.poetry.dependencies.talisker]
-version = '^0.15'
+version = "^0.16"
 extras = [
     'gunicorn',
     'flask',
