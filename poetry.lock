@@ -693,12 +693,12 @@ description = "A common WSGI stack"
 name = "talisker"
 optional = false
 python-versions = "*"
-version = "0.15.0"
+version = "0.16.0"
 
 [package.dependencies]
 Werkzeug = ">=0.10.4,<0.16"
 future = ">=0.15.2,<0.17"
-requests = ">=2.16.0,<3.0"
+requests = ">=2.18.0,<3.0"
 statsd = ">=3.2.1,<4.0"
 
 [package.dependencies.blinker]
@@ -715,7 +715,7 @@ version = ">=0.11,<1.2"
 
 [package.dependencies.gunicorn]
 optional = true
-version = ">=19.7.0,<20.0"
+version = ">=19.7.0,<21.0"
 
 [package.dependencies.prometheus-client]
 optional = true
@@ -727,11 +727,11 @@ version = ">=6.4.0,<7.0"
 
 [package.extras]
 asyncio = ["aiocontextvars (0.2.2)"]
-celery = ["celery (>=3.1.25.0,<5.0)", "kombu (>=3.0.37,<4.5)"]
+celery = ["celery (>=3.1.25.0,<4.4)", "kombu (>=3.0.37,<4.5)"]
 dev = ["logging-tree (>=1.7)", "pygments (>=2.2)", "psutil (>=5.0)", "objgraph (>=3.0)"]
 django = ["django (>=1.10,<2.0)"]
 flask = ["flask (>=0.11,<1.2)", "blinker (>=1.4,<2.0)"]
-gunicorn = ["gunicorn (>=19.7.0,<20.0)"]
+gunicorn = ["gunicorn (>=19.7.0,<21.0)"]
 pg = ["sqlparse (>=0.2)", "psycopg2 (>=2.7.3.2,<3.0)"]
 pg_wheel = ["sqlparse (>=0.2)", "psycopg2-binary (>=2.7.3.2,<3.0)"]
 prometheus = ["prometheus-client (>=0.2.0,<0.4.0 || >0.4.0,<0.4.1 || >0.4.1,<0.5.0)"]
@@ -828,7 +828,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["jaraco.itertools", "func-timeout"]
 
 [metadata]
-content-hash = "01e23833d55baf35623961e1ef811b9c118f3cf59604279b9ba7d7929f1d8f31"
+content-hash = "e6f19863198d4fd2a3665ea48a4798737a7a0d16bbd1b9912e432d172a6a443e"
 python-versions = '^3.6'
 
 [metadata.files]
@@ -1191,9 +1191,9 @@ statsd = [
     {file = "statsd-3.3.0.tar.gz", hash = "sha256:e3e6db4c246f7c59003e51c9720a51a7f39a396541cb9b147ff4b14d15b5dd1f"},
 ]
 talisker = [
-    {file = "talisker-0.15.0-py2-none-any.whl", hash = "sha256:fd65481f6dfcebfcde201a8f3800e421926547d1ba65e05f0df41e2c43e5d6d3"},
-    {file = "talisker-0.15.0-py3-none-any.whl", hash = "sha256:ddbdc92730ce276c7a458aec1b806a9087f86816b584e13665387029cee19ba4"},
-    {file = "talisker-0.15.0.tar.gz", hash = "sha256:d7f186deac4a0f5de44add7f5debebb7cc3daa322b3a830e22ca0b555eb8fb40"},
+    {file = "talisker-0.16.0-py2-none-any.whl", hash = "sha256:27aacde61ae54f5f9ec00049027c8c4f7824d03b2349947cd05bcd32c5ab5cd5"},
+    {file = "talisker-0.16.0-py3-none-any.whl", hash = "sha256:3c3ad24471f27cd3c4a16f874e795b8446255704e8b54a073f33e22138f84024"},
+    {file = "talisker-0.16.0.tar.gz", hash = "sha256:41f01b3dd4b9277253f04e0547f0535382439e998c096e62ce3fc93c1a25adfa"},
 ]
 toml = [
     {file = "toml-0.10.0-py2.7.egg", hash = "sha256:f1db651f9657708513243e61e6cc67d101a39bad662eaa9b5546f789338e07a3"},
