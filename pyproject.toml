@@ -1,6 +1,6 @@
 [tool.poetry]
 name = 'canonicalwebteam.flask_base'
-version = '0.4.2'
+version = '0.4.3'
 description = ''
 authors = ['Canonical webteam <webteam@canonical.com>']
 readme = 'README.md'
