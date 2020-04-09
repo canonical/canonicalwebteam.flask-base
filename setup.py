@@ -29,7 +29,7 @@ setup(
     name="canonicalwebteam.flask-base",  # Required
     # https://www.python.org/dev/peps/pep-0440/
     # https://packaging.python.org/en/latest/single_source_version.html
-    version="0.4.3",  # Required
+    version="0.5.0",  # Required
     # https://packaging.python.org/specifications/core-metadata/#summary
     description="",  # Required
     # https://packaging.python.org/specifications/core-metadata/#description-optional
