@@ -4,7 +4,7 @@ Flask extension that applies common configurations to all of webteam's flask app
 
 ## Usage
 
-``` python3
+```python3
 from canonicalwebteam.flask_base.app import FlaskBase
 
 app = FlaskBase(__name__, "app.name")
@@ -12,7 +12,7 @@ app = FlaskBase(__name__, "app.name")
 
 Or:
 
-``` python3
+```python3
 from canonicalwebteam.flask_base.app import FlaskBase
 
 app = FlaskBase(
@@ -34,7 +34,7 @@ FlaskBase uses [yaml-responses](https://github.com/canonical-web-and-design/cano
 
 `FlaskBase` can optionally use templates to generate the `404` and `500` error responses:
 
-``` python3
+```python3
 app = FlaskBase(
     __name__,
     "app.name",
@@ -49,7 +49,7 @@ This will lead to e.g. `http://localhost/non-existent-path` returning a `404` st
 
 `FlaskBase` can optionally provide redirects for the commonly queried paths `/favicon.ico`, `/robots.txt` and `/humans.txt` to sensible locations:
 
-``` python3
+```python3
 from canonicalwebteam.flask_base.app import FlaskBase
 
 app = FlaskBase(
@@ -68,6 +68,7 @@ This will lead to e.g. `http://localhost/favicon.ico` returning a `302` redirect
 ### Jinja2 helpers
 
 You get two jinja2 helpers to use in your templates from flask-base:
+
 - `now` is a function that outputs the current date in the passed [format](https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes) - `{{ now('%Y') }}` -> `YYYY`
 - `versioned_static` is a function that fingerprints the passed asset - `{{ versioned_static('asset.js') }}` -> `static/asset?v=asset-hash`
 
@@ -79,11 +80,11 @@ If you create a `robots.txt` or `humans.txt` in the root of your project, these 
 
 In this project, for the time being, we maintain both a `pyproject.toml` for Poetry and a `setup.py` for traditional Python tooling. If you are developing on the module, you should update `pyproject.toml` first and then regenerate the `setup.py` using:
 
-``` bash
+```bash
 poetry install
 poetry run poetry-setup
 ```
 
 ## Tests
 
-To run the tests execute `poetry run python -m unittest discover tests`.
+To run the tests execute `SECRET_KEY=fake poetry run python -m unittest discover tests`.
