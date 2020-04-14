@@ -49,6 +49,7 @@ setup(
     install_requires=[
         "canonicalwebteam.yaml-responses[flask] (>=1,<2)",
         "flask (>=1,<2)",
+        "gevent==1.4.0",
         "talisker[gunicorn,flask,prometheus,raven] (>=0.16,<0.17)",
         "Werkzeug (>=0.15,<0.16)",
     ],  # Optional
