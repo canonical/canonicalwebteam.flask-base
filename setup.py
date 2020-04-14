@@ -29,7 +29,7 @@ setup(
     name="canonicalwebteam.flask-base",  # Required
     # https://www.python.org/dev/peps/pep-0440/
     # https://packaging.python.org/en/latest/single_source_version.html
-    version="0.5.0",  # Required
+    version="0.5.1",  # Required
     # https://packaging.python.org/specifications/core-metadata/#summary
     description="",  # Required
     # https://packaging.python.org/specifications/core-metadata/#description-optional
@@ -49,6 +49,7 @@ setup(
     install_requires=[
         "canonicalwebteam.yaml-responses[flask] (>=1,<2)",
         "flask (>=1,<2)",
+        "gevent==1.4.0",
         "talisker[gunicorn,flask,prometheus,raven] (>=0.16,<0.17)",
         "Werkzeug (>=0.15,<0.16)",
     ],  # Optional
