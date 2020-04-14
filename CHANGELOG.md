@@ -1,3 +1,10 @@
+# 0.6.0 (2020-04-14)
+
+### Added
+Remove pinned version
+Update to talisker 0.17.0
+
+
 # 0.5.1 (2020-04-14)
 
 ### Added
