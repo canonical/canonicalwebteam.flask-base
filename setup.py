@@ -1,16 +1,14 @@
 from setuptools import setup, find_packages
 from os import path
-from io import open
-
-here = path.abspath(path.dirname(__file__))
-with open(path.join(here, "README.md"), encoding="utf-8") as f:
-    long_description = f.read()
 
 setup(
     name="canonicalwebteam.flask-base",
     version="0.6.1",
-    description="",
-    long_description=long_description,
+    description=(
+        "Flask extension that applies common configurations"
+        "to all of webteam's flask apps."
+    ),
+    long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     author="Canonical webteam",
     author_email="webteam@canonical.com",
