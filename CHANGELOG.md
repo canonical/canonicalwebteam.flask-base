@@ -1,3 +1,8 @@
+# 0.6.1 (2020-05-20)
+
+### Features
+Serve favicon from static if it exists, otherwise fallback to favicon url.
+
 # 0.6.0 (2020-04-14)
 
 ### Added
