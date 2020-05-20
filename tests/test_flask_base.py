@@ -167,6 +167,18 @@ class TestFlaskBase(unittest.TestCase):
                 "http://localhost" + local_url,
             )
 
+    def test_favicon_serve(self):
+        """
+        If `favicon_url` is provided, check requests to `/favicon.ico`
+        receive a redirect
+        """
+
+        local_app = create_test_app()
+
+        with local_app.test_client() as client:
+            response = client.get("/favicon.ico")
+            self.assertEqual(200, response.status_code)
+
     def test_robots_humans(self):
         """
         If `robots.txt` and `humans.txt` are provided at the root of the

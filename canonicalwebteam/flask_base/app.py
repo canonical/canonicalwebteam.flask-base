@@ -103,7 +103,16 @@ class FlaskBase(flask.Flask):
         def status_check():
             return os.getenv("TALISKER_REVISION_ID", "OK")
 
-        if favicon_url:
+        favicon_path = os.path.join(self.root_path, "../static", "favicon.ico")
+        if os.path.isfile(favicon_path):
+
+            @self.route("/favicon.ico")
+            def favicon():
+                return flask.send_file(
+                    favicon_path, mimetype="image/vnd.microsoft.icon"
+                )
+
+        elif favicon_url:
 
             @self.route("/favicon.ico")
             def favicon():
