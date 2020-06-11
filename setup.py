@@ -3,7 +3,7 @@ from os import path
 
 setup(
     name="canonicalwebteam.flask-base",
-    version="0.6.1",
+    version="0.6.2",
     description=(
         "Flask extension that applies common configurations"
         "to all of webteam's flask apps."
