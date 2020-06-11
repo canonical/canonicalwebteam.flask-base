@@ -3,6 +3,24 @@ name: PR checks
 on: pull_request
 
 jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Install system dependencies
+        run: |
+          sudo apt update && sudo apt install -y --no-install-recommends python3-setuptools
+          pip3 install --upgrade setuptools
+          pip3 install wheel twine
+
+      - name: Build package
+        run: python3 setup.py sdist bdist_wheel
+
+      - name: Twine check
+        run: python3 -m twine check dist/*
+
   lint:
     runs-on: ubuntu-18.04
 
