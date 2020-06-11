@@ -1,3 +1,9 @@
+# 0.6.2 (2020-06-11)
+
+### Fix
+`versioned_static` shouldn't break the app if files are missing
+
+
 # 0.6.1 (2020-05-20)
 
 ### Features
