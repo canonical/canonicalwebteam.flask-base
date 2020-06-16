@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="canonicalwebteam.flask-base",
-    version="0.6.2",
+    version="0.6.3",
     description=(
         "Flask extension that applies common configurations"
         "to all of webteam's flask apps."
@@ -20,6 +20,7 @@ setup(
     install_requires=[
         "canonicalwebteam.yaml-responses[flask] (>=1,<2)",
         "flask (>=1,<2)",
+        "gevent==20.6.1",
         "talisker[gunicorn,gevent,flask,prometheus,raven] (>=0.18)",
         "Werkzeug (>=0.15,<0.16)",
     ],
