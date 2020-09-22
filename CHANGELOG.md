@@ -1,3 +1,9 @@
+# 0.6.4 (2020-09-22)
+
+### Added
+Pin gevent to version 20.6.2
+Pin greenlet to version 0.4.16
+
 # 0.6.3 (2020-05-27)
 
 ### Added
