@@ -48,6 +48,7 @@ class FlaskBase(flask.Flask):
         self.service = service
 
         self.config["SECRET_KEY"] = os.environ["SECRET_KEY"]
+        self.config["SEND_FILE_MAX_AGE_DEFAULT"] = 31536000
 
         self.url_map.strict_slashes = False
         self.url_map.converters["regex"] = RegexConverter
