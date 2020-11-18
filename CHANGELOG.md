@@ -1,3 +1,8 @@
+# 0.7.0 (2020-11-18)
+
+### Added
+Set `SEND_FILE_MAX_AGE_DEFAULT` to a year (31536000)
+
 # 0.6.4 (2020-09-22)
 
 ### Added
