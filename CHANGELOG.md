@@ -1,3 +1,9 @@
+# 0.7.1 (2020-11-23)
+
+### Added
+Changed `SEND_FILE_MAX_AGE_DEFAULT` back to the default value
+Set `Cache-Control: max-age 31536000` for requests with the v in the query string
+
 # 0.7.0 (2020-11-18)
 
 ### Added

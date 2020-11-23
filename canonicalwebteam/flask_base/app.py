@@ -28,6 +28,10 @@ def set_cache_control_headers(response):
         response.headers[
             "Cache-Control"
         ] = "public, max-age=300, stale-while-revalidate=360"
+    elif (
+        flask.request.path.startswith("/static") and "v" in flask.request.args
+    ):
+        response.headers["Cache-Control"] = "public, max-age=31536000"
 
     return response
 
@@ -48,7 +52,6 @@ class FlaskBase(flask.Flask):
         self.service = service
 
         self.config["SECRET_KEY"] = os.environ["SECRET_KEY"]
-        self.config["SEND_FILE_MAX_AGE_DEFAULT"] = 31536000
 
         self.url_map.strict_slashes = False
         self.url_map.converters["regex"] = RegexConverter
