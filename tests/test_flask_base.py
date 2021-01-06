@@ -52,6 +52,14 @@ class TestFlaskBase(unittest.TestCase):
         app = self.create_app()
         self.assertIsInstance(app.wsgi_app, ProxyFix)
 
+    def test_security_headers(self):
+        with create_test_app().test_client() as client:
+            response = client.get("page")
+            self.assertEqual(
+                response.headers.get("X-Frame-Options"),
+                "SAMEORIGIN",
+            )
+
     def test_default_cache_headers(self):
         with create_test_app().test_client() as client:
             cached_response = client.get("page")
