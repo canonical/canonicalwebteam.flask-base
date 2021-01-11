@@ -19,6 +19,12 @@ from canonicalwebteam.yaml_responses.flask_helpers import (
 )
 
 
+def set_security_headers(response):
+    response.headers["X-Frame-Options"] = "SAMEORIGIN"
+
+    return response
+
+
 def set_cache_control_headers(response):
     if flask.request.path.startswith("/_status"):
         response.cache_control.no_store = True
@@ -82,6 +88,7 @@ class FlaskBase(flask.Flask):
             )
         )
 
+        self.after_request(set_security_headers)
         self.after_request(set_cache_control_headers)
 
         self.context_processor(base_context)

@@ -1,3 +1,8 @@
+# 0.7.2 (2021-01-07)
+
+### Added
+Added the security header "X-Frame-Options" with the value "SAMEORIGIN"
+
 # 0.7.1 (2020-11-23)
 
 ### Added
