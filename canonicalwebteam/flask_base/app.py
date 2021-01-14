@@ -20,7 +20,17 @@ from canonicalwebteam.yaml_responses.flask_helpers import (
 
 
 def set_security_headers(response):
-    response.headers["X-Frame-Options"] = "SAMEORIGIN"
+    add_xframe_options_header = True
+
+    # Check if view_function has exclude_xframe_options_header decorator
+    if flask.request.endpoint in flask.current_app.view_functions:
+        view_func = flask.current_app.view_functions[flask.request.endpoint]
+        add_xframe_options_header = not hasattr(
+            view_func, "_exclude_xframe_options_header"
+        )
+
+    if add_xframe_options_header and "X-Frame-Options" not in response.headers:
+        response.headers["X-Frame-Options"] = "SAMEORIGIN"
 
     return response
 
