@@ -34,11 +34,42 @@ def create_test_app():
         flask.session["test"] = True
         return "Found", 302
 
-    @app.route("/cache")
-    def cache():
+    @app.route("/cache/max-age")
+    def cache_max_age():
         response = flask.make_response()
+        response.cache_control.max_age = 4321
+
+        return response, 200
+
+    @app.route("/cache/none")
+    def cache_empty():
+        response = flask.make_response()
+        response.cache_control.max_age = None
+        response.cache_control._set_cache_value(
+            "stale-while-revalidate", None, int
+        )
+        response.cache_control._set_cache_value("stale-if-error", None, int)
+
+        return response, 200
+
+    @app.route("/cache/stale")
+    def cache_stale():
+        response = flask.make_response()
+        response.cache_control._set_cache_value(
+            "stale-while-revalidate", 4321, int
+        )
+
+        return response, 200
+
+    @app.route("/cache/all")
+    def cache_all():
+        response = flask.make_response()
+        response.cache_control.max_age = 4321
         response.cache_control.public = True
-        response.cache_control.max_age = 1000
+        response.cache_control._set_cache_value(
+            "stale-while-revalidate", 4321, int
+        )
+        response.cache_control._set_cache_value("stale-if-error", 4321, int)
 
         return response, 200
 
