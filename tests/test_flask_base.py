@@ -63,10 +63,11 @@ class TestFlaskBase(unittest.TestCase):
     def test_default_cache_headers(self):
         with create_test_app().test_client() as client:
             cached_response = client.get("page")
-            self.assertEqual(
-                cached_response.headers.get("Cache-Control"),
-                "public, max-age=300, stale-while-revalidate=360",
-            )
+            cache = cached_response.headers.get("Cache-Control")
+            self.assertNotIn("public", cache)
+            self.assertIn("max-age=60", cache)
+            self.assertIn("stale-while-revalidate=86400", cache)
+            self.assertIn("stale-if-error=300", cache)
 
     def test_redirects_have_no_cache_headers(self):
         with create_test_app().test_client() as client:
@@ -82,13 +83,41 @@ class TestFlaskBase(unittest.TestCase):
                 cached_response_with_session.headers.get("Vary"), "Cookie"
             )
 
-    def test_cache_does_not_overide(self):
+    def test_cache_override(self):
+        """
+        Check each part of the cache-control instruction can be overridden
+        individually, or nullified
+        """
+
         with create_test_app().test_client() as client:
-            cached_response = client.get("cache")
-            self.assertEqual(
-                cached_response.headers.get("Cache-Control"),
-                "public, max-age=1000",
-            )
+            # all 3 values are overriden, and "public" is added
+            all_response = client.get("cache/all")
+            all_cache = all_response.headers.get("Cache-Control")
+            self.assertIn("public", all_cache)
+            self.assertIn("max-age=4321", all_cache)
+            self.assertIn("stale-while-revalidate=4321", all_cache)
+            self.assertIn("stale-if-error=4321", all_cache)
+
+            # all values are nullified, leading no cache-control header
+            none_response = client.get("cache/none")
+            none_cache = none_response.headers.get("Cache-Control")
+            self.assertIsNone(none_cache)
+
+            # only max-age is overridden, so the "stale" instructions remain
+            max_age_response = client.get("cache/max-age")
+            max_age_cache = max_age_response.headers.get("Cache-Control")
+            self.assertNotIn("public", max_age_cache)
+            self.assertIn("max-age=4321", max_age_cache)
+            self.assertIn("stale-while-revalidate=86400", max_age_cache)
+            self.assertIn("stale-if-error=300", max_age_cache)
+
+            # only "stale-while-revalidate" is overridden
+            stale_response = client.get("cache/stale")
+            stale_cache = stale_response.headers.get("Cache-Control")
+            self.assertNotIn("public", stale_cache)
+            self.assertIn("max-age=60", stale_cache)
+            self.assertIn("stale-while-revalidate=4321", stale_cache)
+            self.assertIn("stale-if-error=300", stale_cache)
 
     def test_status_endpoints(self):
         with create_test_app().test_client() as client:
@@ -96,9 +125,7 @@ class TestFlaskBase(unittest.TestCase):
             response = client.get("_status/check")
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.data.decode(), "a-build-id")
-            self.assertEqual(
-                response.headers.get("Cache-Control"), "no-store, max-age=0"
-            )
+            self.assertEqual(response.headers.get("Cache-Control"), "no-store")
 
     def test_redirects_deleted(self):
         """

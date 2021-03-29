@@ -1,3 +1,8 @@
+# 0.8.0 (2021-03-19)
+
+Change default caching headers to `cache-control: max-age=60, stale-while-revalidate=86400, stale-if-error=300`.
+Make them individually overrideable.
+
 # 0.7.2 (2021-01-07)
 
 ### Added
