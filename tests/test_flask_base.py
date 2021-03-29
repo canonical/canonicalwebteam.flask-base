@@ -125,9 +125,7 @@ class TestFlaskBase(unittest.TestCase):
             response = client.get("_status/check")
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.data.decode(), "a-build-id")
-            self.assertEqual(
-                response.headers.get("Cache-Control"), "no-store, max-age=0"
-            )
+            self.assertEqual(response.headers.get("Cache-Control"), "no-store")
 
     def test_redirects_deleted(self):
         """

@@ -44,9 +44,13 @@ def set_cache_control_headers(response):
         # Our status endpoints need to be uncached
         # to report accurate information at all times
         response.cache_control.no_store = True
-        response.cache_control.max_age = 0
 
-    elif response.status_code == 200:
+    elif (
+        response.status_code == 200
+        and not response.cache_control.no_store
+        and not response.cache_control.no_cache
+        and not response.cache_control.private
+    ):
         # Normal responses, where the cache-control object hasn't
         # been independently modified, should:
 
