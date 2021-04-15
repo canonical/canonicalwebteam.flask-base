@@ -125,6 +125,18 @@ def set_cache_control_headers(response):
     return response
 
 
+def set_permissions_policy_headers(response):
+    """
+    Sets default permissions policies. This disable some browsers features
+    and APIs.
+    """
+    # Disabling interest-cohort for privacy reasons.
+    # https://wicg.github.io/floc/
+    response.headers["Permissions-Policy"] = "interest-cohort=()"
+
+    return response
+
+
 class FlaskBase(flask.Flask):
     def __init__(
         self,
@@ -173,6 +185,7 @@ class FlaskBase(flask.Flask):
 
         self.after_request(set_security_headers)
         self.after_request(set_cache_control_headers)
+        self.after_request(set_permissions_policy_headers)
 
         self.context_processor(base_context)
 
