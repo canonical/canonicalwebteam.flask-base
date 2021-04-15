@@ -1,3 +1,7 @@
+# 0.9.0 (2021-04-15)
+
+Add header: `Permissions-Policy: interest-cohort=()` that disables FLoC for privacy reasons.
+
 # 0.8.0 (2021-03-19)
 
 Change default caching headers to `cache-control: max-age=60, stale-while-revalidate=86400, stale-if-error=300`.
