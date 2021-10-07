@@ -18,6 +18,8 @@ from canonicalwebteam.yaml_responses.flask_helpers import (
     prepare_redirects,
 )
 
+STATUS_CHECK = os.getenv("TALISKER_REVISION_ID", "OK")
+
 
 def set_security_headers(response):
     add_xframe_options_header = True
@@ -208,7 +210,7 @@ class FlaskBase(flask.Flask):
         # Default routes
         @self.route("/_status/check")
         def status_check():
-            return os.getenv("TALISKER_REVISION_ID", "OK")
+            return STATUS_CHECK
 
         favicon_path = os.path.join(self.root_path, "../static", "favicon.ico")
         if os.path.isfile(favicon_path):

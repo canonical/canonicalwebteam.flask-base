@@ -121,10 +121,9 @@ class TestFlaskBase(unittest.TestCase):
 
     def test_status_endpoints(self):
         with create_test_app().test_client() as client:
-            os.environ["TALISKER_REVISION_ID"] = "a-build-id"
             response = client.get("_status/check")
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.data.decode(), "a-build-id")
+            self.assertEqual(response.data.decode(), "OK")
             self.assertEqual(response.headers.get("Cache-Control"), "no-store")
 
     def test_redirects_deleted(self):
