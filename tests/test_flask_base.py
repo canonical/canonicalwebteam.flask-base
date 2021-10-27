@@ -257,6 +257,37 @@ class TestFlaskBase(unittest.TestCase):
                 "http://localhost/page", response.headers.get("Location")
             )
 
+    def test_static_files(self):
+        flask_app = create_test_app()
+
+        with flask_app.test_client() as client:
+            # Check basic serving of static files works
+            # status is 200, contents matches and cache is as expected
+            plain_response = client.get("static/test.json")
+            plain_cache = plain_response.headers.get("Cache-Control")
+
+            self.assertEqual(plain_response.status_code, 200)
+            self.assertEqual(plain_response.json["fish"], "chips")
+            self.assertIn("public", plain_cache)
+
+            max_age = flask_app.config["SEND_FILE_MAX_AGE_DEFAULT"]
+            if max_age:
+                self.assertIn(f"max-age={max_age.seconds}", plain_cache)
+            else:
+                self.assertIn(f"max-age=60", plain_cache)
+
+            # Check hashed content is served with a year-long cache
+            hash_response = client.get("static/test.json?v=527d233")
+            hash_cache = hash_response.headers.get("Cache-Control")
+            self.assertEqual(hash_response.status_code, 200)
+            self.assertEqual(hash_response.json["fish"], "chips")
+            self.assertIn("public", hash_cache)
+            self.assertIn("max-age=31536000", hash_cache)
+
+            # Check when hash doesn't match, we get a 404
+            not_found_response = client.get("static/test.json?v=527d234")
+            self.assertEqual(not_found_response.status_code, 404)
+
 
 if __name__ == "__main__":
     unittest.main()

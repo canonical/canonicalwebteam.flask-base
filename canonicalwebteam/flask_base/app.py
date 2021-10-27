@@ -1,4 +1,5 @@
 # Standard library
+import hashlib
 import os
 
 # Packages
@@ -115,15 +116,6 @@ def set_cache_control_headers(response):
                 "stale-if-error", "300", int
             )
 
-    # TODO: Disabling this until we've got to the bottom of the
-    # cache-poisoning issue for static files
-    #
-    # elif (
-    #     flask.request.path.startswith("/static") and
-    #     "v" in flask.request.args
-    # ):
-    #     response.headers["Cache-Control"] = "public, max-age=31536000"
-
     return response
 
 
@@ -140,6 +132,41 @@ def set_permissions_policy_headers(response):
 
 
 class FlaskBase(flask.Flask):
+    def send_static_file(self, filename: str) -> "flask.wrappers.Response":
+        """
+        Overwrite the default Flask send_static_file method,
+        to simply check if the `v=` parameter is provided,
+        and if so, return 404 if the expected hash doesn't
+        match the contents
+        """
+
+        response = super().send_static_file(filename)
+
+        expected_hash = flask.request.args.get("v")
+
+        # File exists, and we have a version has to compare to
+        if response.status_code == 200 and expected_hash:
+            # Convert this to a non-streaming Response object,
+            # so we can inspect the contents
+            # https://github.com/closeio/Flask-gzip/issues/7#issuecomment-23373695
+            response.direct_passthrough = False
+
+            # Get an md5 hash of the contents
+            file_hash = hashlib.md5(response.data).hexdigest()
+
+            # If it matches the expected hash, it should be safe to cache
+            # this file for a year, as the contents will never change at this
+            # URL
+            if file_hash.startswith(expected_hash):
+                response.headers["Cache-Control"] = "public, max-age=31536000"
+
+            # If it doesn't match, return 404
+            else:
+                flask.abort(404)
+
+        # Now return the static file response
+        return response
+
     def __init__(
         self,
         name,
@@ -206,6 +233,11 @@ class FlaskBase(flask.Flask):
             @self.errorhandler(500)
             def internal_error(error):
                 return flask.render_template(template_500), 500
+
+        # Default routes
+        @self.route("/fish")
+        def fish_chips():
+            return "chips"
 
         # Default routes
         @self.route("/_status/check")
