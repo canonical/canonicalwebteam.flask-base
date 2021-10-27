@@ -41,14 +41,14 @@ def create_test_app():
 
         return response, 200
 
-    @app.route("/cache/none")
+    @app.route("/cache/zero")
     def cache_empty():
         response = flask.make_response()
-        response.cache_control.max_age = None
+        response.cache_control.max_age = 0
         response.cache_control._set_cache_value(
-            "stale-while-revalidate", None, int
+            "stale-while-revalidate", 0, int
         )
-        response.cache_control._set_cache_value("stale-if-error", None, int)
+        response.cache_control._set_cache_value("stale-if-error", 0, int)
 
         return response, 200
 

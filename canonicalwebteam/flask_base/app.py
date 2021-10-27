@@ -57,7 +57,15 @@ def set_cache_control_headers(response):
         # Normal responses, where the cache-control object hasn't
         # been independently modified, should:
 
-        if not response.cache_control.max_age:
+        max_age = response.cache_control.max_age
+        stale_while_revalidate = response.cache_control._get_cache_value(
+            "stale-while-revalidate", False, int
+        )
+        stale_if_error = response.cache_control._get_cache_value(
+            "stale-if-error", False, int
+        )
+
+        if type(max_age) is not int:
             # Hard-cache for a minimal amount of time so content can be easily
             # refreshed.
             #
@@ -72,9 +80,7 @@ def set_cache_control_headers(response):
             # 1 minute seems like a good compromise.
             response.cache_control.max_age = "60"
 
-        if not response.cache_control._get_cache_value(
-            "stale-while-revalidate", False, int
-        ):
+        if type(stale_while_revalidate) is not int:
             # stale-while-revalidate defines a period after the cache has
             # expired (max-age) during which users will get sent the stale
             # cache, while the cache updates in the background. This mean
@@ -92,9 +98,7 @@ def set_cache_control_headers(response):
                 "stale-while-revalidate", "86400", int
             )
 
-        if not response.cache_control._get_cache_value(
-            "stale-if-error", False, int
-        ):
+        if type(stale_if_error) is not int:
             # stale-if-error defines a period of time during which a stale
             # cache will be served back to the client if the cache observes
             # an error code response (>=500) from the backend. When the cache

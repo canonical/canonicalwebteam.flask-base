@@ -98,10 +98,12 @@ class TestFlaskBase(unittest.TestCase):
             self.assertIn("stale-while-revalidate=4321", all_cache)
             self.assertIn("stale-if-error=4321", all_cache)
 
-            # all values are nullified, leading no cache-control header
-            none_response = client.get("cache/none")
-            none_cache = none_response.headers.get("Cache-Control")
-            self.assertIsNone(none_cache)
+            # all values are set to zero
+            zero_response = client.get("cache/zero")
+            zero_cache = zero_response.headers.get("Cache-Control")
+            self.assertIn("max-age=0", zero_cache)
+            self.assertIn("stale-while-revalidate=0", zero_cache)
+            self.assertIn("stale-if-error=0", zero_cache)
 
             # only max-age is overridden, so the "stale" instructions remain
             max_age_response = client.get("cache/max-age")
