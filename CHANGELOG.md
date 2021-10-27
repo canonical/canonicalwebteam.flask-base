@@ -1,3 +1,7 @@
+# 0.9.2 (2021-10-27)
+
+Check static files against provided `?v=` hashes
+
 # 0.9.0 (2021-04-15)
 
 Add header: `Permissions-Policy: interest-cohort=()` that disables FLoC for privacy reasons.

@@ -274,7 +274,7 @@ class TestFlaskBase(unittest.TestCase):
             if max_age:
                 self.assertIn(f"max-age={max_age.seconds}", plain_cache)
             else:
-                self.assertIn(f"max-age=60", plain_cache)
+                self.assertIn("max-age=60", plain_cache)
 
             # Check hashed content is served with a year-long cache
             hash_response = client.get("static/test.json?v=527d233")
