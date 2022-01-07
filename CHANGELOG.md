@@ -1,3 +1,7 @@
+# 0.9.3 (2021-10-27)
+
+Include PID on Talisker logs
+
 # 0.9.2 (2021-10-27)
 
 Check static files against provided `?v=` hashes

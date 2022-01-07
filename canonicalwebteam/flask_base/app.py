@@ -223,7 +223,9 @@ class FlaskBase(flask.Flask):
         self.context_processor(base_context)
 
         talisker.flask.register(self)
-        talisker.logs.set_global_extra({"service": self.service})
+        talisker.logs.set_global_extra(
+            {"service": self.service, "pid": os.getpid()}
+        )
 
         # Default error handlers
         if template_404:
