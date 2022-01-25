@@ -1,3 +1,7 @@
+# 1.0.0 (2021-10-27)
+
+Upgrade dependencies: Werkzeug and gevent.
+
 # 0.9.3 (2021-10-27)
 
 Include PID on Talisker logs
