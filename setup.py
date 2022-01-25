@@ -22,7 +22,7 @@ setup(
     install_requires=[
         "canonicalwebteam.yaml-responses[flask] (>=1,<2)",
         "flask (>=1,<2)",
-        "gevent==21.8.0",
+        "gevent==21.12.0",
         "greenlet==1.1.2",
         "talisker[gunicorn,gevent,flask,prometheus,raven]==0.19.0",
         "Werkzeug (>=1.0.0, <1.2)",
