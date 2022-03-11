@@ -232,13 +232,23 @@ class FlaskBase(flask.Flask):
 
             @self.errorhandler(404)
             def not_found_error(error):
-                return flask.render_template(template_404), 404
+                return (
+                    flask.render_template(
+                        template_404, message=error.description
+                    ),
+                    404,
+                )
 
         if template_500:
 
             @self.errorhandler(500)
             def internal_error(error):
-                return flask.render_template(template_500), 500
+                return (
+                    flask.render_template(
+                        template_500, message=error.description
+                    ),
+                    500,
+                )
 
         # Default routes
         @self.route("/fish")
