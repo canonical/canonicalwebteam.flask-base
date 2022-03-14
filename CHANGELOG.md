@@ -1,3 +1,7 @@
+# 1.0.2 (2022-03-21)
+
+Pass through error messages from flask.abort to 404.html and 500.html templates
+
 # 1.0.1 (2022-02-21)
 
 Fix dependencies for Flask 1.1.x: markupsafe and itsdangerous.
