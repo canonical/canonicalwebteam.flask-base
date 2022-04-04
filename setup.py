@@ -13,6 +13,7 @@ setup(
     long_description_content_type="text/markdown",
     author="Canonical webteam",
     author_email="webteam@canonical.com",
+    url="https://github.com/canonical-web-and-design/canonicalwebteam.flask-base",
     classifiers=[
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.6",
