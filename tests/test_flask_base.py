@@ -215,20 +215,25 @@ class TestFlaskBase(unittest.TestCase):
             response = client.get("/favicon.ico")
             self.assertEqual(200, response.status_code)
 
-    def test_robots_humans(self):
+    def test_text_files(self):
         """
-        If `robots.txt` and `humans.txt` are provided at the root of the
-        project, check requests to `/robots.txt` load the content
+        If `robots.txt`, `humans.txt`, `security.txt` are provided at the root
+        of the project, check requests to `/robots.txt` load the content
         """
 
         with create_test_app().test_client() as client:
             warnings.simplefilter("ignore", ResourceWarning)
             robots_response = client.get("robots.txt")
             humans_response = client.get("humans.txt")
+            security_response = client.get("/.well-known/security.txt")
             self.assertEqual(200, robots_response.status_code)
             self.assertEqual(200, humans_response.status_code)
+            self.assertEqual(200, security_response.status_code)
             self.assertEqual(robots_response.data, b"robots!")
             self.assertEqual(humans_response.data, b"humans!")
+            self.assertEqual(
+                security_response.data, b"security is very important!"
+            )
 
     def test_error_pages(self):
         """
