@@ -277,6 +277,7 @@ class FlaskBase(flask.Flask):
 
         robots_path = os.path.join(self.root_path, "..", "robots.txt")
         humans_path = os.path.join(self.root_path, "..", "humans.txt")
+        security_path = os.path.join(self.root_path, "..", "security.txt")
 
         if os.path.isfile(robots_path):
 
@@ -289,3 +290,9 @@ class FlaskBase(flask.Flask):
             @self.route("/humans.txt")
             def humans():
                 return flask.send_file(humans_path)
+
+        if os.path.isfile(security_path):
+
+            @self.route("/.well-known/security.txt")
+            def security():
+                return flask.send_file(security_path)

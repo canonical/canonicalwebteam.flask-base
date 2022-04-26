@@ -1,3 +1,11 @@
+# 1.0.4 (2022-04-26)
+
+Added support for security.txt files
+
+# 1.0.3 (2022-03-29)
+
+Fix dependencies for Flask 1.1.x: jinja2
+
 # 1.0.2 (2022-03-21)
 
 Pass through error messages from flask.abort to 404.html and 500.html templates

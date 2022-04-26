@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="canonicalwebteam.flask-base",
-    version="1.0.3",
+    version="1.0.4",
     description=(
         "Flask extension that applies common configurations"
         "to all of webteam's flask apps."
