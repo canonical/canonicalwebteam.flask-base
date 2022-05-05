@@ -22,7 +22,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         "canonicalwebteam.yaml-responses[flask] (>=1,<2)",
-        "flask (>=1,<2)",
+        "flask==1.1.2",
         "jinja2 (>=3,<3.1.0)",
         "gevent==21.12.0",
         "greenlet==1.1.2",
