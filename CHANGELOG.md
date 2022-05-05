@@ -1,3 +1,7 @@
+# 1.0.5 (2022-05-05)
+
+Pin to Flask 1.1.2 to avoid dependency conflicts
+
 # 1.0.4 (2022-04-26)
 
 Added support for security.txt files
