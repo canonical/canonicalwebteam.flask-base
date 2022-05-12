@@ -135,6 +135,17 @@ def set_permissions_policy_headers(response):
     return response
 
 
+def set_clacks(response):
+    """
+    Keep Sir Terry Pratchett's name alive
+    https://xclacksoverhead.org/home/about
+    """
+
+    response.headers["X-Clacks-Overhead"] = "GNU Terry Pratchett"
+
+    return response
+
+
 class FlaskBase(flask.Flask):
     def send_static_file(self, filename: str) -> "flask.wrappers.Response":
         """
@@ -219,6 +230,7 @@ class FlaskBase(flask.Flask):
         self.after_request(set_security_headers)
         self.after_request(set_cache_control_headers)
         self.after_request(set_permissions_policy_headers)
+        self.after_request(set_clacks)
 
         self.context_processor(base_context)
 
