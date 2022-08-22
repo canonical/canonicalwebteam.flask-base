@@ -23,6 +23,7 @@ STATUS_CHECK = os.getenv("TALISKER_REVISION_ID", "OK")
 
 
 def set_security_headers(response):
+    # Decide whether to add x-frame-options
     add_xframe_options_header = True
 
     # Check if view_function has exclude_xframe_options_header decorator
@@ -34,6 +35,9 @@ def set_security_headers(response):
 
     if add_xframe_options_header and "X-Frame-Options" not in response.headers:
         response.headers["X-Frame-Options"] = "SAMEORIGIN"
+
+    # Add standard security headers
+    response.headers["X-Content-Type-Options"] = "NOSNIFF"
 
     return response
 

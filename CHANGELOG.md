@@ -1,3 +1,7 @@
+# 1.0.6 (2022-08-04)
+
+Disable MIME-sniffing with `x-content-type-options: NOSNIFF` ([rationale here](https://github.com/canonical/web-design-systems-squad/issues/77#issuecomment-1205100399))
+
 # 1.0.5 (2022-05-05)
 
 Pin to Flask 1.1.2 to avoid dependency conflicts
