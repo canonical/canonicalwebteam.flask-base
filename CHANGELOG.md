@@ -1,3 +1,7 @@
+# 1.0.7 (2022-08-04)
+
+Remove redirection when clearing the trailing slash in the route (solves the issue in case of POST)
+
 # 1.0.6 (2022-08-04)
 
 Disable MIME-sniffing with `x-content-type-options: NOSNIFF` ([rationale here](https://github.com/canonical/web-design-systems-squad/issues/77#issuecomment-1205100399))

@@ -1,9 +1,9 @@
 import os
 from datetime import datetime
 from hashlib import md5
-from urllib.parse import unquote, urlparse, urlunparse
+from urllib.parse import unquote, urlparse
 
-from flask import current_app, redirect, request
+from flask import current_app, request
 
 
 def now(format):
@@ -50,6 +50,4 @@ def clear_trailing_slash():
     path = parsed_url.path
 
     if path != "/" and path.endswith("/"):
-        new_uri = urlunparse(parsed_url._replace(path=path[:-1]))
-
-        return redirect(new_uri)
+        request.url = path[:-1]

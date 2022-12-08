@@ -259,10 +259,7 @@ class TestFlaskBase(unittest.TestCase):
             self.assertEqual(200, response.status_code)
 
             response = client.get("/page/")
-            self.assertEqual(302, response.status_code)
-            self.assertEqual(
-                "http://localhost/page", response.headers.get("Location")
-            )
+            self.assertEqual(200, response.status_code)
 
     def test_static_files(self):
         flask_app = create_test_app()
