@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="canonicalwebteam.flask-base",
-    version="1.0.6",
+    version="1.0.7",
     description=(
         "Flask extension that applies common configurations"
         "to all of webteam's flask apps."
@@ -26,7 +26,7 @@ setup(
         "jinja2 (>=3,<3.1.0)",
         "gevent==21.12.0",
         "greenlet==1.1.2",
-        "talisker[gunicorn,gevent,flask,prometheus,raven]==0.19.0",
+        "talisker[gunicorn,gevent,flask,prometheus,raven]",
         "Werkzeug (>=1.0.0, <1.2)",
         "markupsafe >= 1.0, < 2.1.0",
         "itsdangerous >= 0.24, < 2.0",
