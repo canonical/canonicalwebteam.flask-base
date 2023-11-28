@@ -4,9 +4,11 @@ import os
 
 # Packages
 import flask
-import talisker.flask
 from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.debug import DebuggedApplication
+from flask import g, request
+import time
+import logging
 
 # Local modules
 from canonicalwebteam.flask_base.context import (
@@ -150,6 +152,34 @@ def set_clacks(response):
     return response
 
 
+class RequestInfo:
+    def __init__(self, response):
+        self.request_method = request.method
+        self.request_path = request.path
+        self.status_code = response.status_code
+        self.view_function = request.endpoint
+        self.request_ip = request.remote_addr
+        self.request_protocol = request.environ.get('SERVER_PROTOCOL')
+        self.response_length = len(g.get('response_data', ''))
+        self.response_type = response.headers.get('content-type', None)
+        self.request_referrer = request.referrer
+        self.service = "dqlite.io"
+        self.proto = request.environ.get('SERVER_PROTOCOL')
+        self.request_user_agent = request.headers.get('User-Agent')
+
+
+class CustomLoggingFilter(logging.Filter):
+    def __init__(self):
+        self.record_msg = []
+
+    def filter(self, record):
+        if record.levelno == logging.WARNING:
+            record.msg = f'"{record.msg}" service=dqlite.io pid={os.getpid()}'
+        elif record.levelno == logging.DEBUG:
+            record.msg = f'"{record.msg}" service=dqlite.io pid={os.getpid()}'
+        return True
+
+
 class FlaskBase(flask.Flask):
     def send_static_file(self, filename: str) -> "flask.wrappers.Response":
         """
@@ -186,6 +216,46 @@ class FlaskBase(flask.Flask):
         # Now return the static file response
         return response
 
+    def set_start_time(self):
+        self.start_time = time.time()
+
+    def get_duration(self):
+        return f"{(time.time() - self.start_time) * 1000.0:.3f}"
+
+    def get_discourse_info(self):
+        base_host, base_url = None, None
+        cookie_jar = self.discourse_docs.parser.api.session.cookies
+        for cookie in cookie_jar:
+            base_host = cookie.domain
+        base_url = self.discourse_docs.parser.api.base_url
+
+        return (base_host, base_url)
+
+    def format_logger(self, logger_name, log_level):
+        if self.custom_filter is None:
+            return False
+
+        logger = logging.getLogger(logger_name)
+        logger.setLevel(log_level)
+        logger.addFilter(self.custom_filter)
+        logger.propagate = True
+        return True
+
+    # TODO: http request
+    def enable_requests_logging(self, response):
+        self.format_logger("requests.packages.urllib3", logging.INFO)
+
+    def set_request_info(self, response):
+        rq = RequestInfo(response)
+        duration_ms = self.get_duration()
+        self.logger.info(f'"GET {request.path}" method={request.method} path={rq.request_path} status={rq.status_code} view={request.endpoint} duration_ms={duration_ms} ip={rq.request_ip} proto={rq.proto} length={rq.response_length} referrer={request.referrer} ua={request.headers.get("User-Agent")} service={rq.service} pid={os.getpid()}')
+        self.enable_requests_logging(response)
+
+        return response
+
+    def add_discourse_docs(self, docs):
+        self.discourse_docs = docs
+
     def __init__(
         self,
         name,
@@ -210,8 +280,18 @@ class FlaskBase(flask.Flask):
 
         self.wsgi_app = ProxyFix(self.wsgi_app)
 
-        self.before_request(clear_trailing_slash)
+        msg_format = '%(asctime)s.%(msecs)03dZ %(levelname)s [%(name)s] %(message)s'
+        logging.basicConfig(format=msg_format, level=logging.DEBUG)
+        self.custom_filter = CustomLoggingFilter()
+        self.logger.addFilter(self.custom_filter)
 
+        self.format_logger("urllib3.connectionpool", logging.DEBUG)
+        self.format_logger("gunicorn.error", logging.DEBUG)
+
+        self.start_time = None
+        self.before_request(self.set_start_time)
+
+        self.before_request(clear_trailing_slash)
         self.before_request(
             prepare_redirects(
                 path=os.path.join(self.root_path, "..", "redirects.yaml")
@@ -231,17 +311,14 @@ class FlaskBase(flask.Flask):
             )
         )
 
+        self.after_request(self.set_request_info)
+
         self.after_request(set_security_headers)
         self.after_request(set_cache_control_headers)
         self.after_request(set_permissions_policy_headers)
         self.after_request(set_clacks)
 
         self.context_processor(base_context)
-
-        talisker.flask.register(self)
-        talisker.logs.set_global_extra(
-            {"service": self.service, "pid": os.getpid()}
-        )
 
         # Default error handlers
         if template_404:
