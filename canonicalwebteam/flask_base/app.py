@@ -9,6 +9,8 @@ from werkzeug.debug import DebuggedApplication
 from flask import g, request
 import time
 import logging
+from urllib.parse import urlparse
+
 
 # Local modules
 from canonicalwebteam.flask_base.context import (
@@ -154,18 +156,20 @@ def set_clacks(response):
 
 class RequestInfo:
     def __init__(self, response):
+        self.response_length = response.headers.get('content-length', None)
+        self.response_type = response.headers.get('content-type', None)
+
+        self.request_ip = request.remote_addr
         self.request_method = request.method
         self.request_path = request.path
+        self.request_protocol = request.environ.get('SERVER_PROTOCOL')
+        self.request_referrer = request.referrer
+        self.request_user_agent = request.headers.get('User-Agent')
+
+        self.proto = request.environ.get('SERVER_PROTOCOL')
+        self.service = "dqlite.io"
         self.status_code = response.status_code
         self.view_function = request.endpoint
-        self.request_ip = request.remote_addr
-        self.request_protocol = request.environ.get('SERVER_PROTOCOL')
-        self.response_length = len(g.get('response_data', ''))
-        self.response_type = response.headers.get('content-type', None)
-        self.request_referrer = request.referrer
-        self.service = "dqlite.io"
-        self.proto = request.environ.get('SERVER_PROTOCOL')
-        self.request_user_agent = request.headers.get('User-Agent')
 
 
 class CustomLoggingFilter(logging.Filter):
@@ -173,11 +177,19 @@ class CustomLoggingFilter(logging.Filter):
         self.record_msg = []
 
     def filter(self, record):
+        # TODO: can improve getting urllib3 messages: http request
+        if record.name == "urllib3.connectionpool":
+            if record.levelno == logging.DEBUG:
+                message = record.getMessage()
+                self.record_msg.append(message)
         if record.levelno == logging.WARNING:
             record.msg = f'"{record.msg}" service=dqlite.io pid={os.getpid()}'
         elif record.levelno == logging.DEBUG:
             record.msg = f'"{record.msg}" service=dqlite.io pid={os.getpid()}'
         return True
+
+    def get_base_url(self):
+        return self.record_msg
 
 
 class FlaskBase(flask.Flask):
@@ -241,9 +253,50 @@ class FlaskBase(flask.Flask):
         logger.propagate = True
         return True
 
-    # TODO: http request
+    def parse_url(self, url, proto='http'):
+        # urlparse won't parse properly without a protocol
+        if '://' not in url:
+            url = proto + '://' + url
+        return urlparse(url)
+
+    def parse_request(self, request):
+        parsed = self.parse_url(request.url)
+        self.request_type = None
+        if parsed.scheme:
+            self.request_type = parsed.scheme + " request"
+
     def enable_requests_logging(self, response):
-        self.format_logger("requests.packages.urllib3", logging.INFO)
+        if response is None:
+            self.logger.exception('http request failure')
+            return
+
+        self.format_logger("requests.packages.urllib3", logging.DEBUG)
+        self.parse_request(request)
+
+        # request data
+        rq = RequestInfo(response)
+        duration_ms = self.get_duration()
+
+        # discourse docs data
+        (base_host, base_url) = self.get_discourse_info()
+        messages = self.custom_filter.get_base_url()
+
+        # get base_url from most recent GET request
+        if base_host and base_url and messages:
+            for i in range(len(messages)-1, -1, -1):
+                msg = messages[i]
+                data = msg.split(' ')
+                if data:
+                    check_url = data[0].rsplit(':', 1)[0]
+                    if check_url == base_url:
+                        for i in range(1, len(data)):
+                            if data[i] == '"GET':
+                                base_url += (data[i+1])
+                                break
+
+            if self.request_type:
+                self.logger.info(
+                    f'"{self.request_type}" url={base_url} method={rq.request_method} host={base_host} status={rq.status_code} duration_ms={duration_ms} response_type="{rq.response_type}" service={rq.service} pid={os.getpid()}')
 
     def set_request_info(self, response):
         rq = RequestInfo(response)
