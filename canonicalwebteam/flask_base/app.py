@@ -6,7 +6,7 @@ import os
 import flask
 from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.debug import DebuggedApplication
-from flask import g, request
+from flask import request
 import time
 import logging
 from urllib.parse import urlparse
@@ -175,21 +175,80 @@ class RequestInfo:
 class CustomLoggingFilter(logging.Filter):
     def __init__(self):
         self.record_msg = []
+        self.logfmt = None
 
     def filter(self, record):
-        # TODO: can improve getting urllib3 messages: http request
+        # Get http request url from http request logs
         if record.name == "urllib3.connectionpool":
             if record.levelno == logging.DEBUG:
                 message = record.getMessage()
                 self.record_msg.append(message)
-        if record.levelno == logging.WARNING:
-            record.msg = f'"{record.msg}" service=dqlite.io pid={os.getpid()}'
-        elif record.levelno == logging.DEBUG:
-            record.msg = f'"{record.msg}" service=dqlite.io pid={os.getpid()}'
         return True
 
     def get_base_url(self):
         return self.record_msg
+
+    def reset_base_url(self):
+        self.record_msg = []
+
+
+DEFAULT_COLOURS = {
+        'logfmt': '2;3;36',     # dim italic teal
+        'name': '0;33',         # orange
+        'msg': '1;16',          # bold white/black, depending on terminal palette
+        'time': '2;34',         # dim dark blue
+        'DEBUG': '0;32',        # green
+        'INFO': '0;32',         # green
+        'WARNING': '0;33',      # orange
+        'ERROR': '0;31',        # red
+        'CRITICAL': '0;31',     # red
+    }
+
+COLOUR_SCHEMES = {}
+COLOUR_SCHEMES['default'] = DEFAULT_COLOURS
+
+# simple strips italics/bold
+COLOUR_SCHEMES['simple'] = DEFAULT_COLOURS.copy()
+COLOUR_SCHEMES['simple']['logfmt'] = '0;36'
+COLOUR_SCHEMES['simple']['msg'] = '0;37'
+COLOUR_SCHEMES['simple']['time'] = '0;34'
+
+
+class CustomFormatter(logging.Formatter):
+    CLEAR = '\x1b[0m'
+
+    def __init__(self, style='default'):
+        style = COLOUR_SCHEMES[style]
+        self.colours = {k: '\x1b[' + v + 'm' for k, v in style.items()}
+        format = (
+            '{time}%(asctime)s.%(msecs)03dZ{clear} '
+            '%(coloured_levelname)s '
+            '{name}%(name)s{clear} '
+            '"{msg}%(message)s{clear}"'
+            '{logfmt}%(logfmt)s{clear}'
+        ).format(clear=self.CLEAR, **self.colours)
+        super().__init__(fmt=format)
+
+    def format(self, record):
+        default_logfmt = f' service=dqlite.io pid={os.getpid()}'
+
+        logfmt = record.__dict__.get('logfmt', {})
+        if logfmt:
+            record.logfmt = logfmt + default_logfmt
+        else:
+            record.logfmt = default_logfmt
+
+        colour = self.colours[record.levelname]
+        record.coloured_levelname = '{colour}{levelname}{clear}'.format(
+            colour=colour,
+            levelname=record.levelname,
+            clear=self.CLEAR,
+        )
+        return super(CustomFormatter, self).format(record)
+
+    def logfmt(self, structured):
+        logfmt_str = super(CustomFormatter, self).logfmt(structured)
+        return self.colours['logfmt'] + logfmt_str + self.CLEAR
 
 
 class FlaskBase(flask.Flask):
@@ -243,15 +302,12 @@ class FlaskBase(flask.Flask):
 
         return (base_host, base_url)
 
-    def format_logger(self, logger_name, log_level):
-        if self.custom_filter is None:
-            return False
-
+    def format_logger(self, logger_name):
         logger = logging.getLogger(logger_name)
-        logger.setLevel(log_level)
         logger.addFilter(self.custom_filter)
         logger.propagate = True
-        return True
+
+        return logger
 
     def parse_url(self, url, proto='http'):
         # urlparse won't parse properly without a protocol
@@ -270,7 +326,7 @@ class FlaskBase(flask.Flask):
             self.logger.exception('http request failure')
             return
 
-        self.format_logger("requests.packages.urllib3", logging.DEBUG)
+        self.format_logger('requests.packages.urllib3')
         self.parse_request(request)
 
         # request data
@@ -295,13 +351,15 @@ class FlaskBase(flask.Flask):
                                 break
 
             if self.request_type:
-                self.logger.info(
-                    f'"{self.request_type}" url={base_url} method={rq.request_method} host={base_host} status={rq.status_code} duration_ms={duration_ms} response_type="{rq.response_type}" service={rq.service} pid={os.getpid()}')
+                self.logger.info(f'{self.request_type}',
+                                 extra={'logfmt': f' url={base_url} method={rq.request_method} host={base_host} status={rq.status_code} duration_ms={duration_ms} response_type="{rq.response_type}"'})
+                self.custom_filter.reset_base_url()
 
     def set_request_info(self, response):
         rq = RequestInfo(response)
         duration_ms = self.get_duration()
-        self.logger.info(f'"GET {request.path}" method={request.method} path={rq.request_path} status={rq.status_code} view={request.endpoint} duration_ms={duration_ms} ip={rq.request_ip} proto={rq.proto} length={rq.response_length} referrer={request.referrer} ua={request.headers.get("User-Agent")} service={rq.service} pid={os.getpid()}')
+        self.logger.info(f'GET {request.path}',
+                         extra={'logfmt': f' method={request.method} path={rq.request_path} status={rq.status_code} view={request.endpoint} duration_ms={duration_ms} ip={rq.request_ip} proto={rq.proto} length={rq.response_length} referrer={request.referrer} ua={request.headers.get("User-Agent")}'})
         self.enable_requests_logging(response)
 
         return response
@@ -328,18 +386,23 @@ class FlaskBase(flask.Flask):
         self.url_map.strict_slashes = False
         self.url_map.converters["regex"] = RegexConverter
 
+        # Configure logger in debug mode
         if self.debug:
             self.wsgi_app = DebuggedApplication(self.wsgi_app)
 
-        self.wsgi_app = ProxyFix(self.wsgi_app)
+            self.custom_filter = CustomLoggingFilter()
+            self.handler = logging.StreamHandler()
+            self.handler.setFormatter(CustomFormatter())
 
-        msg_format = '%(asctime)s.%(msecs)03dZ %(levelname)s [%(name)s] %(message)s'
-        logging.basicConfig(format=msg_format, level=logging.DEBUG)
-        self.custom_filter = CustomLoggingFilter()
-        self.logger.addFilter(self.custom_filter)
+            logging.getLogger().setLevel(logging.DEBUG)
+            logging.getLogger().addFilter(self.custom_filter)
 
-        self.format_logger("urllib3.connectionpool", logging.DEBUG)
-        self.format_logger("gunicorn.error", logging.DEBUG)
+            self.format_logger('urllib3.connectionpool')
+            self.format_logger('gunicorn.error')
+
+            logging.getLogger().addHandler(self.handler)
+
+        self.wsgi_app = ProxyFix(self.wsgi_app)        
 
         self.start_time = None
         self.before_request(self.set_start_time)
@@ -364,7 +427,9 @@ class FlaskBase(flask.Flask):
             )
         )
 
-        self.after_request(self.set_request_info)
+        # Get http request logs in debug mode
+        if self.debug:
+            self.after_request(self.set_request_info)
 
         self.after_request(set_security_headers)
         self.after_request(set_cache_control_headers)
