@@ -231,8 +231,9 @@ class CustomFormatter(logging.Formatter):
 
     def format(self, record):
         default_logfmt = f' service=dqlite.io pid={os.getpid()}'
-
         logfmt = record.__dict__.get('logfmt', {})
+
+        # Add extra attributes to logfmt if present
         if logfmt:
             record.logfmt = logfmt + default_logfmt
         else:
@@ -245,10 +246,6 @@ class CustomFormatter(logging.Formatter):
             clear=self.CLEAR,
         )
         return super(CustomFormatter, self).format(record)
-
-    def logfmt(self, structured):
-        logfmt_str = super(CustomFormatter, self).logfmt(structured)
-        return self.colours['logfmt'] + logfmt_str + self.CLEAR
 
 
 class FlaskBase(flask.Flask):
@@ -329,10 +326,6 @@ class FlaskBase(flask.Flask):
         self.format_logger('requests.packages.urllib3')
         self.parse_request(request)
 
-        # request data
-        rq = RequestInfo(response)
-        duration_ms = self.get_duration()
-
         # discourse docs data
         (base_host, base_url) = self.get_discourse_info()
         messages = self.custom_filter.get_base_url()
@@ -351,18 +344,43 @@ class FlaskBase(flask.Flask):
                                 break
 
             if self.request_type:
-                self.logger.info(f'{self.request_type}',
-                                 extra={'logfmt': f' url={base_url} method={rq.request_method} host={base_host} status={rq.status_code} duration_ms={duration_ms} response_type="{rq.response_type}"'})
+                meta = self.get_request_logfmt(response, {'base_url': base_url, 'base_host': base_host})
+                self.logger.info(f'{self.request_type}', extra={'logfmt': meta})
                 self.custom_filter.reset_base_url()
 
     def set_request_info(self, response):
-        rq = RequestInfo(response)
-        duration_ms = self.get_duration()
-        self.logger.info(f'GET {request.path}',
-                         extra={'logfmt': f' method={request.method} path={rq.request_path} status={rq.status_code} view={request.endpoint} duration_ms={duration_ms} ip={rq.request_ip} proto={rq.proto} length={rq.response_length} referrer={request.referrer} ua={request.headers.get("User-Agent")}'})
+        meta = self.get_request_logfmt(response, None)
+        self.logger.info(f'GET {request.path}', extra={'logfmt': meta})
         self.enable_requests_logging(response)
 
         return response
+
+    def get_request_logfmt(self, response, info):
+        rq = RequestInfo(response)
+        meta = ''
+
+        # Default attributes
+        meta += f' method={rq.request_method}'
+        meta += f' status={rq.status_code}'
+        meta += f' duration_ms={self.get_duration()}'
+
+        # http request
+        if info:
+            meta += f' url={info["base_url"]}'
+            meta += f' host={info["base_host"]}'
+            meta += f' response_type={rq.response_type}'
+
+        # GET request
+        else:
+            meta += f' path={rq.request_path}'
+            meta += f' view={rq.view_function}'
+            meta += f' ip={rq.request_ip}'
+            meta += f' proto={rq.proto}'
+            meta += f' length={rq.response_length}'
+            meta += f' referrer={rq.request_referrer}'
+            meta += f' ua={rq.request_user_agent}'
+
+        return meta
 
     def add_discourse_docs(self, docs):
         self.discourse_docs = docs
@@ -402,7 +420,7 @@ class FlaskBase(flask.Flask):
 
             logging.getLogger().addHandler(self.handler)
 
-        self.wsgi_app = ProxyFix(self.wsgi_app)        
+        self.wsgi_app = ProxyFix(self.wsgi_app)
 
         self.start_time = None
         self.before_request(self.set_start_time)
