@@ -13,7 +13,7 @@ from urllib.parse import urlparse
 
 from canonicalwebteam.flask_base.logs import (
     CustomFormatter, CustomLoggingFilter,
-    format_logger, set_custom_filter, set_request_info, 
+    format_logger, set_custom_filter, set_request_info,
     set_service, set_start_time
 )
 
@@ -196,9 +196,6 @@ class FlaskBase(flask.Flask):
         # Now return the static file response
         return response
 
-    # def add_docs(self, docs):
-    #     add_discourse_docs(docs)
-
     def __init__(
         self,
         name,
@@ -220,18 +217,15 @@ class FlaskBase(flask.Flask):
 
         self.wsgi_app = DebuggedApplication(self.wsgi_app)
 
-        # TODO: configure logger
-
+        # Configure logger
         self.custom_filter = CustomLoggingFilter()
         self.handler = logging.StreamHandler()
         self.handler.setFormatter(CustomFormatter())
-
         logging.getLogger().setLevel(logging.DEBUG)
         logging.getLogger().addFilter(self.custom_filter)
 
         set_service(self.service)
         set_custom_filter(self.custom_filter)
-
         format_logger('urllib3.connectionpool')
         format_logger('gunicorn.error')
         format_logger('flask.app')
@@ -261,9 +255,7 @@ class FlaskBase(flask.Flask):
                 path=os.path.join(self.root_path, "..", "deleted.yaml")
             )
         )
-        # TODO: Request info
         self.after_request(lambda response: set_request_info(response, self.logger))
-
         self.after_request(set_security_headers)
         self.after_request(set_cache_control_headers)
         self.after_request(set_permissions_policy_headers)

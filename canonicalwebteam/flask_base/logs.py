@@ -1,7 +1,6 @@
 from flask import request
 import time
 import logging
-from urllib.parse import urlparse
 import os
 
 
@@ -24,16 +23,25 @@ class RequestInfo:
 
 class CustomLoggingFilter(logging.Filter):
     def __init__(self):
-        self.record_msg = []
-        self.logfmt = None
+        self.args = None
+        self.http_request = False
 
     def filter(self, record):
-        # Get http request url from http request logs
         if record.name == "urllib3.connectionpool":
-            if record.levelno == logging.DEBUG:
-                message = record.getMessage()
-                self.record_msg.append(message)
+            if record.levelno == logging.DEBUG and len(record.args) > 3:
+                self.args = record.args
+                self.http_request = True
         return True
+
+    def log_http_request(self, response):
+        if self.http_request:
+            base_host = self.args[1]
+            base_url = str(self.args[0]) + '://' + str(self.args[1]) + str(self.args[4])
+
+            meta = get_request_logfmt(response, {'base_url': base_url, 'base_host': base_host})
+            logger = logging.getLogger("requests")
+            logger.info('http request', extra={'logfmt': meta})
+            self.http_request = False
 
 
 DEFAULT_COLOURS = {
@@ -91,9 +99,8 @@ class CustomFormatter(logging.Formatter):
         )
         return super(CustomFormatter, self).format(record)
 
-# FlaskBase methods
-# Global attributes
 
+# Global attributes
 custom_filter = None
 start_time = None
 service = None
@@ -126,35 +133,12 @@ def format_logger(logger_name):
     return logger
 
 
-def parse_url(url, proto='http'):
-    # urlparse won't parse properly without a protocol
-    if '://' not in url:
-        url = proto + '://' + url
-    return urlparse(url)
-
-
-def parse_request(request):
-    parsed = parse_url(request.url)
-    request_type = None
-    if parsed.scheme:
-        request_type = parsed.scheme + " request"
-
-    return request_type
-
-
 def enable_requests_logging(response, logger):
     if response is None:
         logger.exception('http request failure')
         return
-
     format_logger('requests.packages.urllib3')
-    request_type = parse_request(request)
-
-    base_host = "base_host"
-    base_url = "base_url"
-    if request_type:
-        meta = get_request_logfmt(response, {'base_url': base_url, 'base_host': base_host})
-        logger.info(f'{request_type}', extra={'logfmt': meta})
+    custom_filter.log_http_request(response)
 
 
 def set_request_info(response, logger):
@@ -165,7 +149,7 @@ def set_request_info(response, logger):
     return response
 
 
-def get_request_logfmt(response, info):    
+def get_request_logfmt(response, info):
     rq = RequestInfo(response)
     meta = ''
 
