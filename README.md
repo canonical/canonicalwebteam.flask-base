@@ -30,6 +30,10 @@ For local development, it's best to test this module with one of our website pro
 
 ## Features
 
+### ProxyFix
+
+FlaskBase includes [ProxyFix](https://werkzeug.palletsprojects.com/en/3.0.x/middleware/proxy_fix/) to avoid SSL stripping on redirects.
+
 ### Redirects and deleted paths
 
 FlaskBase uses [yaml-responses](https://github.com/canonical-web-and-design/canonicalwebteam.yaml-responses) to allow easy configuration of redirects and return of deleted responses, by creating `redirects.yaml`, `permanent-redirects.yaml` and `deleted.yaml` in the site root directory.
@@ -69,6 +73,10 @@ app = FlaskBase(
 
 This will lead to e.g. `http://localhost/favicon.ico` returning a `302` redirect to `http://localhost/static/favicon.ico`.
 
+### Clear trailing slashes
+
+Automatically clears all trailing slashes from all routes.
+
 ### Jinja2 helpers
 
 You get two jinja2 helpers to use in your templates from flask-base:
@@ -76,9 +84,22 @@ You get two jinja2 helpers to use in your templates from flask-base:
 - `now` is a function that outputs the current date in the passed [format](https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes) - `{{ now('%Y') }}` -> `YYYY`
 - `versioned_static` is a function that fingerprints the passed asset - `{{ versioned_static('asset.js') }}` -> `static/asset?v=asset-hash`
 
-### `robots.txt` and `humans.txt`
+### HTTP headers
 
-If you create a `robots.txt` or `humans.txt` in the root of your project, these will be served at `/robots.txt` and `/humans.txt` respectively.
+You get the following headers automatically set:
+
+- `X-Content-Type-Options: NOSNIFF`
+- `Permissions-Policy: interest-cohort=()`
+- `X-Frame-Options: SAMEORIGIN`, which can be excluded with `exclude_xframe_options_header` decorator
+- `Cache-Control` if `response.cache_control.*` not set and according to static asset versioning (see `versioned_static` above)
+
+### `security.txt`, `robots.txt` and `humans.txt`
+
+If you create a `security.txt`, `robots.txt` or `humans.txt` in the root of your project, these will be served at `/.well-known/security.txt`, `/robots.txt` and `/humans.txt` respectively.
+
+### `/_status/check` endpoint
+
+Automatically adds the `/_status/check` endpoint which is used by content-caches for backend health checking or e.g. by k8s for checking the status of pods.
 
 ## Tests
 
