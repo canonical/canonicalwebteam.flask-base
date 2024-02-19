@@ -4,9 +4,19 @@ import os
 
 # Packages
 import flask
-import talisker.flask
 from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.debug import DebuggedApplication
+
+
+import logging
+from urllib.parse import urlparse
+
+from canonicalwebteam.flask_base.logs import (
+    CustomFormatter, CustomLoggingFilter,
+    format_logger, set_custom_filter, set_request_info,
+    set_service, set_start_time
+)
+
 
 # Local modules
 from canonicalwebteam.flask_base.context import (
@@ -205,13 +215,28 @@ class FlaskBase(flask.Flask):
         self.url_map.strict_slashes = False
         self.url_map.converters["regex"] = RegexConverter
 
-        if self.debug:
-            self.wsgi_app = DebuggedApplication(self.wsgi_app)
+        self.wsgi_app = DebuggedApplication(self.wsgi_app)
+
+        # Configure logger
+        self.custom_filter = CustomLoggingFilter()
+        self.handler = logging.StreamHandler()
+        self.handler.setFormatter(CustomFormatter())
+        logging.getLogger().setLevel(logging.DEBUG)
+        logging.getLogger().addFilter(self.custom_filter)
+
+        set_service(self.service)
+        set_custom_filter(self.custom_filter)
+        format_logger('urllib3.connectionpool')
+        format_logger('gunicorn.error')
+        format_logger('flask.app')
+
+        logging.getLogger().addHandler(self.handler)
 
         self.wsgi_app = ProxyFix(self.wsgi_app)
 
-        self.before_request(clear_trailing_slash)
+        self.before_request(set_start_time)
 
+        self.before_request(clear_trailing_slash)
         self.before_request(
             prepare_redirects(
                 path=os.path.join(self.root_path, "..", "redirects.yaml")
@@ -230,18 +255,13 @@ class FlaskBase(flask.Flask):
                 path=os.path.join(self.root_path, "..", "deleted.yaml")
             )
         )
-
+        self.after_request(lambda response: set_request_info(response, self.logger))
         self.after_request(set_security_headers)
         self.after_request(set_cache_control_headers)
         self.after_request(set_permissions_policy_headers)
         self.after_request(set_clacks)
 
         self.context_processor(base_context)
-
-        talisker.flask.register(self)
-        talisker.logs.set_global_extra(
-            {"service": self.service, "pid": os.getpid()}
-        )
 
         # Default error handlers
         if template_404:
