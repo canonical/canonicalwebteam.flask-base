@@ -266,7 +266,7 @@ class TestFlaskBase(unittest.TestCase):
 
     def test_static_files(self):
         flask_app = create_test_app()
-        flask_app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 31536000  # 1 year
+        flask_app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 31536000  # 1 year
 
         with flask_app.test_client() as client:
             # Check basic serving of static files works
