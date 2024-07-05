@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
 
       - name: Install system dependencies
         run: |
@@ -22,17 +22,17 @@ jobs:
         run: python3 -m twine check dist/*
 
   lint:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-python@v1
-        with:
-          python-version: 3.6
+      - uses: actions/checkout@v2
 
-      - name: Install dependencies
-        run: pip3 install black flake8
-
+      - name: Install system dependencies
+        run: |
+          sudo apt update && sudo apt install -y --no-install-recommends python3-setuptools
+          pip3 install --upgrade setuptools
+          pip3 install black flake8
+          
       - name: Flake
         run: flake8 canonicalwebteam tests
 
@@ -40,13 +40,16 @@ jobs:
         run: black --line-length 79 --check canonicalwebteam tests
 
   test:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-python@v1
-        with:
-          python-version: 3.6
+      - uses: actions/checkout@v2
+      
+      - name: Install system dependencies
+        run: |
+          sudo apt update && sudo apt install -y --no-install-recommends python3-setuptools
+          pip3 install --upgrade setuptools
+          pip3 install .
 
       - name: Install dependencies
         run: pip3 install .

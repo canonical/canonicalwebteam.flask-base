@@ -200,7 +200,7 @@ class TestFlaskBase(unittest.TestCase):
             self.assertEqual(302, response.status_code)
             self.assertEqual(
                 response.headers.get("Location"),
-                "http://localhost" + local_url,
+                local_url,
             )
 
     def test_favicon_serve(self):
@@ -266,6 +266,7 @@ class TestFlaskBase(unittest.TestCase):
 
     def test_static_files(self):
         flask_app = create_test_app()
+        flask_app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 31536000  # 1 year
 
         with flask_app.test_client() as client:
             # Check basic serving of static files works
@@ -279,7 +280,7 @@ class TestFlaskBase(unittest.TestCase):
 
             max_age = flask_app.config["SEND_FILE_MAX_AGE_DEFAULT"]
             if max_age:
-                self.assertIn(f"max-age={max_age.seconds}", plain_cache)
+                self.assertIn(f"max-age={max_age}", plain_cache)
             else:
                 self.assertIn("max-age=60", plain_cache)
 
