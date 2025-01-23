@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="canonicalwebteam.flask-base",
-    version="2.0.0",
+    version="2.1.0",
     description=(
         "Flask extension that applies common configurations"
         "to all of webteam's flask apps."
@@ -30,6 +30,7 @@ setup(
         "Werkzeug >= 2.3.7, < 3.0.0",
         "markupsafe >= 1.0, < 2.2.0",
         "itsdangerous >= 0.24, < 2.2.0",
+        "flask-squeeze >= 3.1.0",
     ],
     dependency_links=[],
     include_package_data=True,

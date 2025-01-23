@@ -7,6 +7,7 @@ import flask
 import talisker.flask
 from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.debug import DebuggedApplication
+from flask_squeeze import Squeeze
 
 # Local modules
 from canonicalwebteam.flask_base.context import (
@@ -242,6 +243,10 @@ class FlaskBase(flask.Flask):
         talisker.logs.set_global_extra(
             {"service": self.service, "pid": os.getpid()}
         )
+
+        # Compress JS and CSS
+        squeeze = Squeeze()
+        squeeze.init_app(self)
 
         # Default error handlers
         if template_404:
