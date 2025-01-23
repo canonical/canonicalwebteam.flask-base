@@ -1,3 +1,7 @@
+# 2.1.0 (2025-01-23)
+
+Add compression of JS and CSS assets
+
 # 2.0.0 (2024-07-04)
 
 Pin to Flask 2.3.3
