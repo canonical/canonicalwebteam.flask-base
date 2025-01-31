@@ -13,7 +13,7 @@ jobs:
         run: |
           sudo apt update && sudo apt install -y --no-install-recommends python3-setuptools
           pip3 install --upgrade setuptools
-          pip3 install wheel twine
+          pip3 install wheel twine==6.0.1
 
       - name: Build package
         run: python3 setup.py sdist bdist_wheel
@@ -32,7 +32,7 @@ jobs:
           sudo apt update && sudo apt install -y --no-install-recommends python3-setuptools
           pip3 install --upgrade setuptools
           pip3 install black flake8
-          
+
       - name: Flake
         run: flake8 canonicalwebteam tests
 
@@ -44,7 +44,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install system dependencies
         run: |
           sudo apt update && sudo apt install -y --no-install-recommends python3-setuptools
@@ -56,7 +56,7 @@ jobs:
 
       - name: Test
         run: SECRET_KEY=fake python3 -m unittest discover tests
-        
+
   check-inclusive-naming:
     runs-on: ubuntu-latest
 
