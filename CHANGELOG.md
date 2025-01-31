@@ -1,7 +1,12 @@
-# 2.1.0 (2024-12-05)
+# 2.2.0 (2024-01-32)
 
 Add support for Python 3.12
-Update dependencies:
+Update dependencies: talisker, Werkzeug
+Remove unused direct dependencies that are used by talisker: gevent, jinja2, markupsafe, itsdangerous gevent, jinja2, markupsafe, itsdangerous
+
+# 2.1.0 (2025-01-23)
+
+Add compression of JS and CSS assets
 
 # 2.0.0 (2024-07-04)
 
