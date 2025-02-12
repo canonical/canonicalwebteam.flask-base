@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 setup(
     name="canonicalwebteam.flask-base",
@@ -32,7 +32,6 @@ setup(
         "Werkzeug >= 2.3.7",
         # Use latest version of Flask once Talisker supports werkzeug >=3
         "flask==2.3.3",
-        "flask-squeeze >= 3.1.0",
     ],
     dependency_links=[],
     include_package_data=True,

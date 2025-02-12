@@ -5,9 +5,12 @@ import os
 # Packages
 import flask
 import talisker.flask
-from werkzeug.middleware.proxy_fix import ProxyFix
+from canonicalwebteam.yaml_responses.flask_helpers import (
+    prepare_deleted,
+    prepare_redirects,
+)
 from werkzeug.debug import DebuggedApplication
-from flask_squeeze import Squeeze
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 # Local modules
 from canonicalwebteam.flask_base.context import (
@@ -15,10 +18,6 @@ from canonicalwebteam.flask_base.context import (
     clear_trailing_slash,
 )
 from canonicalwebteam.flask_base.converters import RegexConverter
-from canonicalwebteam.yaml_responses.flask_helpers import (
-    prepare_deleted,
-    prepare_redirects,
-)
 
 STATUS_CHECK = os.getenv("TALISKER_REVISION_ID", "OK")
 
@@ -243,10 +242,6 @@ class FlaskBase(flask.Flask):
         talisker.logs.set_global_extra(
             {"service": self.service, "pid": os.getpid()}
         )
-
-        # Compress JS and CSS
-        squeeze = Squeeze()
-        squeeze.init_app(self)
 
         # Default error handlers
         if template_404:
