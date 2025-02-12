@@ -8,7 +8,7 @@
 
 This version will require changes in the `Dockerfile` to use a virtual environment as this is mandatory for Python 3.12.
 
-Here is an example of how to `2.2.0`: [canonical/ubuntu.com@82f04d9](https://github.com/canonical/ubuntu.com/pull/14699/commits/82f04d909c81f4495669b1dbc28b7051e77ca2f2)
+Here is an example of how to upgrade to `2.2.0`: [canonical/ubuntu.com@82f04d9](https://github.com/canonical/ubuntu.com/pull/14699/commits/82f04d909c81f4495669b1dbc28b7051e77ca2f2)
 
 # 2.1.0 (2025-01-23)
 
