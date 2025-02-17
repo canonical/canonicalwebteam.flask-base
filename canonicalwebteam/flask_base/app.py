@@ -9,8 +9,8 @@ from canonicalwebteam.yaml_responses.flask_helpers import (
     prepare_deleted,
     prepare_redirects,
 )
+from middlewares.ProxyFix import ProxyFix
 from werkzeug.debug import DebuggedApplication
-from werkzeug.middleware.proxy_fix import ProxyFix
 
 # Local modules
 from canonicalwebteam.flask_base.context import (

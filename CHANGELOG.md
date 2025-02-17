@@ -1,3 +1,7 @@
+# 2.2.2 (2025-02-17)
+
+Fix forwarded IP header to use `X-Original-Forwarded-For` in priority over `X-Forwarded-For`.
+
 # 2.2.1 (2025-02-12)
 
 Revert `2.1.0` changes to compression of JS and CSS assets
