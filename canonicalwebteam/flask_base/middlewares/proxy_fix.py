@@ -17,7 +17,6 @@ from __future__ import annotations
 
 import typing as t
 
-from wsgiref.types import StartResponse, WSGIApplication, WSGIEnvironment
 from werkzeug.http import parse_list_header
 
 
@@ -58,7 +57,7 @@ class ProxyFix:
 
     def __init__(
         self,
-        app: WSGIApplication,
+        app,
         x_for: int = 1,
         x_original_for: int = 0,
         x_proto: int = 1,
@@ -90,9 +89,7 @@ class ProxyFix:
             return values[-trusted]
         return None
 
-    def __call__(
-        self, environ: WSGIEnvironment, start_response: StartResponse
-    ) -> t.Iterable[bytes]:
+    def __call__(self, environ, start_response) -> t.Iterable[bytes]:
         """Modify the WSGI environ based on the various forwarding headers
         before calling the wrapped application. Store the original
         environ values in ``werkzeug.proxy_fix.orig``.
