@@ -17,42 +17,43 @@ from __future__ import annotations
 
 import typing as t
 
-from _typeshed.wsgi import StartResponse, WSGIApplication, WSGIEnvironment
+from wsgiref.types import StartResponse, WSGIApplication, WSGIEnvironment
 from werkzeug.http import parse_list_header
 
 
 class ProxyFix:
     """Adjust the WSGI environ based on ``X-Forwarded-`` that proxies in
-    front of the application may set.
+        front of the application may set.
 
-    -   ``X-Forwarded-For`` sets ``REMOTE_ADDR``.
-    -   ``X-Original-Forwarded-For`` sets ``REMOTE_ADDR`` (and takes precedence
-        over ``X-Forwarded-For`` if configured).
-    -   ``X-Forwarded-Proto`` sets ``wsgi.url_scheme``.
-    -   ``X-Forwarded-Host`` sets ``HTTP_HOST``, ``SERVER_NAME``, and ``SERVER_PORT``.
-    -   ``X-Forwarded-Port`` sets ``HTTP_HOST`` and ``SERVER_PORT``.
-    -   ``X-Forwarded-Prefix`` sets ``SCRIPT_NAME``.
+        -   ``X-Forwarded-For`` sets ``REMOTE_ADDR``.
+        -   ``X-Original-Forwarded-For`` sets ``REMOTE_ADDR``(and takes precedence over ``X-Forwarded-For`` if configured). # noqa
+        -   ``X-Forwarded-Proto`` sets ``wsgi.url_scheme``.
+        -   ``X-Forwarded-Host`` sets ``HTTP_HOST``, ``SERVER_NAME``
+     and ``SERVER_PORT``.
+        -   ``X-Forwarded-Port`` sets ``HTTP_HOST`` and ``SERVER_PORT``.
+        -   ``X-Forwarded-Prefix`` sets ``SCRIPT_NAME``.
 
-    You must tell the middleware how many proxies set each header so it
-    knows what values to trust. It is a security issue to trust values
-    that came from the client rather than a proxy.
+        You must tell the middleware how many proxies set each header so it
+        knows what values to trust. It is a security issue to trust values
+        that came from the client rather than a proxy.
 
-    The original values of the headers are stored in the WSGI
-    environ as ``werkzeug.proxy_fix.orig``, a dict.
+        The original values of the headers are stored in the WSGI
+        environ as ``werkzeug.proxy_fix.orig``, a dict.
 
-    :param app: The WSGI application to wrap.
-    :param x_for: Number of values to trust for ``X-Forwarded-For``.
-    :param x_original_for: Number of values to trust for ``X-Original-Forwarded-For``.
-    :param x_proto: Number of values to trust for ``X-Forwarded-Proto``.
-    :param x_host: Number of values to trust for ``X-Forwarded-Host``.
-    :param x_port: Number of values to trust for ``X-Forwarded-Port``.
-    :param x_prefix: Number of values to trust for ``X-Forwarded-Prefix``.
+        :param app: The WSGI application to wrap.
+        :param x_for: Number of values to trust for ``X-Forwarded-For``.
+        :param x_original_for: Number of values to trust for
+    ``X-Original-Forwarded-For``.
+        :param x_proto: Number of values to trust for ``X-Forwarded-Proto``.
+        :param x_host: Number of values to trust for ``X-Forwarded-Host``.
+        :param x_port: Number of values to trust for ``X-Forwarded-Port``.
+        :param x_prefix: Number of values to trust for ``X-Forwarded-Prefix``.
 
-    ```
-    from werkzeug.middleware.proxy_fix import ProxyFix
-    # App is behind one proxy that sets the -For and -Host headers.
-    app = ProxyFix(app, x_for=1, x_host=1)
-    ```
+        ```
+        from werkzeug.middleware.proxy_fix import ProxyFix
+        # App is behind one proxy that sets the -For and -Host headers.
+        app = ProxyFix(app, x_for=1, x_host=1)
+        ```
     """
 
     def __init__(
@@ -139,7 +140,8 @@ class ProxyFix:
         )
         if x_host:
             environ["HTTP_HOST"] = environ["SERVER_NAME"] = x_host
-            # If the host contains a port (and isn't an IPv6 literal without a port),
+            # If the host contains a port
+            # (and isn't an IPv6 literal without a port),
             # split it out.
             if ":" in x_host and not x_host.endswith("]"):
                 environ["SERVER_NAME"], environ["SERVER_PORT"] = x_host.rsplit(
@@ -152,7 +154,8 @@ class ProxyFix:
         if x_port:
             host = environ.get("HTTP_HOST")
             if host:
-                # If the host contains a port (and isn't an IPv6 literal without a port),
+                # If the host contains a port
+                # (and isn't an IPv6 literal without a port),
                 # remove the existing port before appending the new one.
                 if ":" in host and not host.endswith("]"):
                     host = host.rsplit(":", 1)[0]

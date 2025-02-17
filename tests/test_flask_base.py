@@ -6,7 +6,7 @@ from contextlib import contextmanager
 
 # Packages
 import talisker.testing
-from werkzeug.middleware.proxy_fix import ProxyFix
+from canonicalwebteam.flask_base.middlewares.proxy_fix import ProxyFix
 from werkzeug.debug import DebuggedApplication
 
 # Local modules
