@@ -1,15 +1,12 @@
 # Standard library
+import gzip
 import hashlib
 import os
 
 # Packages
 import flask
 import talisker.flask
-from canonicalwebteam.yaml_responses.flask_helpers import (
-    prepare_deleted,
-    prepare_redirects,
-)
-from canonicalwebteam.flask_base.middlewares.proxy_fix import ProxyFix
+from flask_compress import Compress
 from werkzeug.debug import DebuggedApplication
 
 # Local modules
@@ -18,6 +15,11 @@ from canonicalwebteam.flask_base.context import (
     clear_trailing_slash,
 )
 from canonicalwebteam.flask_base.converters import RegexConverter
+from canonicalwebteam.flask_base.middlewares.proxy_fix import ProxyFix
+from canonicalwebteam.yaml_responses.flask_helpers import (
+    prepare_deleted,
+    prepare_redirects,
+)
 
 STATUS_CHECK = os.getenv("TALISKER_REVISION_ID", "OK")
 
@@ -148,6 +150,15 @@ def set_clacks(response):
     response.headers["X-Clacks-Overhead"] = "GNU Terry Pratchett"
 
     return response
+
+
+def set_compression_types(app):
+    """
+    Set the file types that should be compressed.
+    """
+
+    compress = Compress()
+    compress.init_app(app)
 
 
 class FlaskBase(flask.Flask):
@@ -312,3 +323,5 @@ class FlaskBase(flask.Flask):
             @self.route("/.well-known/security.txt")
             def security():
                 return flask.send_file(security_path)
+
+        set_compression_types(self)
