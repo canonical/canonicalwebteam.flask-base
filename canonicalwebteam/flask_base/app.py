@@ -1,5 +1,4 @@
 # Standard library
-import gzip
 import hashlib
 import os
 
