@@ -6,11 +6,11 @@ from contextlib import contextmanager
 
 # Packages
 import talisker.testing
-from canonicalwebteam.flask_base.middlewares.proxy_fix import ProxyFix
 from werkzeug.debug import DebuggedApplication
 
 # Local modules
 from canonicalwebteam.flask_base.app import FlaskBase
+from canonicalwebteam.flask_base.middlewares.proxy_fix import ProxyFix
 from tests.test_app.webapp.app import create_test_app
 
 
@@ -80,7 +80,8 @@ class TestFlaskBase(unittest.TestCase):
         with create_test_app().test_client() as client:
             cached_response_with_session = client.get("auth")
             self.assertEqual(
-                cached_response_with_session.headers.get("Vary"), "Cookie"
+                cached_response_with_session.headers.get("Vary"),
+                "Accept-Encoding, Cookie",
             )
 
     def test_cache_override(self):
