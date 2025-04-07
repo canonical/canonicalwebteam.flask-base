@@ -1,3 +1,3 @@
-from canonicalwebteam.flask_base.worker import LogWorker
+from canonicalwebteam.flask_base import worker
 
-__all__ = ["LogWorker"]
+__all__ = ["worker"]

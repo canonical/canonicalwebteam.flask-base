@@ -9,7 +9,7 @@ exiting.
 Run gunicorn in the usual way, but specify the worker class as LogWorker.
 
 talisker.gunicorn.gevent webapp.app:app \
-    -k canonicalwebteam.flask-base.worker.LogWorker
+    -k canonicalwebteam.flask_base.worker.LogWorker
 
 """
 
@@ -60,7 +60,7 @@ class LogWorker(GeventWorker):
     def notify_error(self, sig: int) -> None:
         """Print recent traceback logs."""
         self._log(f"notifying errors with signal {sig}")
-        self._log(traceback.format_exc())
+        self._log("Stacktrace: " + traceback.format_exc())
 
     def accept(self, listener: socket) -> None:
         """Accept a new client connection."""
