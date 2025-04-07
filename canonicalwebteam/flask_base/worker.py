@@ -8,27 +8,38 @@ exiting.
 ## Usage
 Run gunicorn in the usual way, but specify the worker class as LogWorker.
 
-talisker.gunicorn.gevent webapp.app:app -k flask_base.worker.LogWorker
+talisker.gunicorn.gevent webapp.app:app \
+    -k canonicalwebteam.flask-base.worker.LogWorker
 
 """
 
+from __future__ import annotations
+
+import logging
 import secrets
-import sys
 import traceback
-from typing import NoReturn
+from typing import TYPE_CHECKING
 
 from gunicorn import util
 from gunicorn.workers.ggevent import GeventWorker
+
+if TYPE_CHECKING:
+    from socket import socket
+    from types import FrameType
+
+
+logger = logging.getLogger("gunicorn.error")
 
 
 class LogWorker(GeventWorker):
     def __init__(self, *args: tuple, **kwargs: dict) -> None:
         super().__init__(*args, **kwargs)
         self.instance_id = secrets.token_hex(6)
-        self.clients = []
+        self.clients: list[socket] = []
 
     def _log(self, msg: str) -> None:
-        print(f"[CUSTOM WORKER][{self.instance_id}]: {msg}")
+        msg = f"[LOG WORKER][{self.instance_id}]: {msg}"
+        self.log.info(msg)
 
     def close_clients_gracefully(self) -> None:
         """Send a 200 response to all registered clients"""
@@ -44,14 +55,14 @@ class LogWorker(GeventWorker):
                 conn.sendall(response_data)
                 conn.close()
         except Exception as e:  # noqa: BLE001
-            self._log(str(e))
+            self._log("Stacktrace: " + str(e))
 
     def notify_error(self, sig: int) -> None:
         """Print recent traceback logs."""
         self._log(f"notifying errors with signal {sig}")
         self._log(traceback.format_exc())
 
-    def accept(self, listener) -> None:
+    def accept(self, listener: socket) -> None:
         """Accept a new client connection."""
         client, addr = listener.accept()
         # Register client connections to this worker
@@ -60,16 +71,16 @@ class LogWorker(GeventWorker):
         util.close_on_exec(client)
         self.handle(listener, client, addr)
 
-    def handle_exit(self, sig, frame) -> None:
+    def handle_exit(self, sig: int, frame: FrameType | None) -> None:
         """Handle SIGTERM gracefully"""
         self._log(f"handling signal {sig}")
         self.notify_error(sig)
         self.close_clients_gracefully()
-        sys.exit(0)
+        super().handle_exit(sig, frame)
 
-    def handle_quit(self, sig, frame) -> NoReturn:
+    def handle_quit(self, sig: int, frame: FrameType | None) -> None:
         """Handle SIGQUIT gracefully"""
         self._log(f"handling signal {sig}")
         self.notify_error(sig)
         self.close_clients_gracefully()
-        sys.exit(0)
+        super().handle_quit(sig, frame)
