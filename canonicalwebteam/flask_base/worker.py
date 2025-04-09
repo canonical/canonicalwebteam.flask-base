@@ -17,10 +17,10 @@ from __future__ import annotations
 
 import logging
 import secrets
+import sys
 import traceback
 from typing import TYPE_CHECKING
 
-from gunicorn import util
 from gunicorn.workers.ggevent import GeventWorker
 
 if TYPE_CHECKING:
@@ -55,32 +55,39 @@ class LogWorker(GeventWorker):
                 conn.sendall(response_data)
                 conn.close()
         except Exception as e:  # noqa: BLE001
-            self._log("Stacktrace: " + str(e))
+            self._log("Unable to close client: " + str(e))
 
     def notify_error(self, sig: int) -> None:
         """Print recent traceback logs."""
         self._log(f"notifying errors with signal {sig}")
         self._log("Stacktrace: " + traceback.format_exc())
 
-    def accept(self, listener: socket) -> None:
-        """Accept a new client connection."""
-        client, addr = listener.accept()
+    def handle(self, listener: socket, client: socket, addr: tuple) -> None:
+        """Handle a new client connection."""
         # Register client connections to this worker
-        self.clients.append(client)
-        client.setblocking(1)
-        util.close_on_exec(client)
-        self.handle(listener, client, addr)
+        self.clients.append(listener)
+        super().handle(listener, client, addr)
 
     def handle_exit(self, sig: int, frame: FrameType | None) -> None:
         """Handle SIGTERM gracefully"""
         self._log(f"handling signal {sig}")
         self.notify_error(sig)
         self.close_clients_gracefully()
-        super().handle_exit(sig, frame)
+        self._log(f"closing worker {self.instance_id}")
+        sys.exit(0)
 
     def handle_quit(self, sig: int, frame: FrameType | None) -> None:
         """Handle SIGQUIT gracefully"""
         self._log(f"handling signal {sig}")
         self.notify_error(sig)
         self.close_clients_gracefully()
-        super().handle_quit(sig, frame)
+        self._log(f"closing worker {self.instance_id}")
+        sys.exit(0)
+
+    def handle_interrupt(self, sig: int, frame: FrameType | None) -> None:
+        """Handle SIGINT gracefully"""
+        self._log(f"handling signal {sig}")
+        self.notify_error(sig)
+        self.close_clients_gracefully()
+        self._log(f"closing worker {self.instance_id}")
+        sys.exit(0)
