@@ -1,3 +1,11 @@
+# 2.4.0 (2025-03-21)
+
+Fix Werkzeug version limit to work with current Flask `2.3.3`.
+
+# 2.3.0 (2025-02-28)
+
+Add response content compression using Gzip
+
 # 2.2.2 (2025-02-17)
 
 Fix forwarded IP header to use `X-Original-Forwarded-For` in priority over `X-Forwarded-For`.
