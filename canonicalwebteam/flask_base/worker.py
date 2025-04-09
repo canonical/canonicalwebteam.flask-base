@@ -17,7 +17,6 @@ from __future__ import annotations
 
 import logging
 import secrets
-import sys
 import traceback
 from typing import TYPE_CHECKING
 
@@ -74,7 +73,6 @@ class LogWorker(GeventWorker):
         self.notify_error(sig)
         self.close_clients_gracefully()
         self._log(f"closing worker {self.instance_id}")
-        sys.exit(0)
 
     def handle_quit(self, sig: int, frame: FrameType | None) -> None:
         """Handle SIGQUIT gracefully"""
@@ -82,7 +80,6 @@ class LogWorker(GeventWorker):
         self.notify_error(sig)
         self.close_clients_gracefully()
         self._log(f"closing worker {self.instance_id}")
-        sys.exit(0)
 
     def handle_interrupt(self, sig: int, frame: FrameType | None) -> None:
         """Handle SIGINT gracefully"""
@@ -90,4 +87,3 @@ class LogWorker(GeventWorker):
         self.notify_error(sig)
         self.close_clients_gracefully()
         self._log(f"closing worker {self.instance_id}")
-        sys.exit(0)
