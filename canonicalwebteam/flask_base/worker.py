@@ -66,7 +66,8 @@ class LogWorker(GeventWorker):
         # Register client connections to this worker
         self._log(
             f"New connection: {listener.getsockname()} "
-            f"to {client.getsockname()}",
+            f"to {client.getsockname()} "
+            f"at {addr}",
         )  # remove after review
         self.clients.append(listener)
         super().handle(listener, client, addr)
