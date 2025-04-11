@@ -101,6 +101,18 @@ If you create a `security.txt`, `robots.txt` or `humans.txt` in the root of your
 
 Automatically adds the `/_status/check` endpoint which is used by content-caches for backend health checking or e.g. by k8s for checking the status of pods.
 
+### Custom gunicorn gevent worker
+
+Included is a custom gunicorn gevent worker designed to handle SIGINT and SIGTERM gracefully, by closing all client connections and logging the stacktrace before exiting.
+
+#### Usage
+Run gunicorn in the usual way, but specify the worker class as LogWorker.
+
+```bash
+talisker.gunicorn.gevent webapp.app:app \
+    -k canonicalwebteam.flask_base.worker.LogWorker
+```
+
 ## Tests
 
 To run the tests execute `SECRET_KEY=fake python3 -m unittest discover tests`.
