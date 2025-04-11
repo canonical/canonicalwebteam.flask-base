@@ -16,6 +16,7 @@ talisker.gunicorn.gevent webapp.app:app \
 from __future__ import annotations
 
 import logging
+import os
 import secrets
 import traceback
 from typing import TYPE_CHECKING
@@ -72,23 +73,26 @@ class LogWorker(GeventWorker):
         self.clients.append(listener)
         super().handle(listener, client, addr)
 
-    def handle_exit(self, sig: int, frame: FrameType | None) -> None:
-        """Handle SIGTERM gracefully"""
+    def handle_termination_gracefully(
+        self,
+        sig: int,
+        frame: FrameType | None,
+    ) -> None:
+        """Handle termination signal gracefully"""
         self._log(f"handling signal {sig}")
         self.notify_error(sig)
         self.close_clients_gracefully()
         self._log(f"closing worker {self.instance_id}")
+        os._exit(0)  # exit immediately, avoiding later exception catches
+
+    def handle_exit(self, sig: int, frame: FrameType | None) -> None:
+        """Handle SIGTERM gracefully"""
+        self.handle_termination_gracefully(sig, frame)
 
     def handle_quit(self, sig: int, frame: FrameType | None) -> None:
         """Handle SIGQUIT gracefully"""
-        self._log(f"handling signal {sig}")
-        self.notify_error(sig)
-        self.close_clients_gracefully()
-        self._log(f"closing worker {self.instance_id}")
+        self.handle_termination_gracefully(sig, frame)
 
     def handle_interrupt(self, sig: int, frame: FrameType | None) -> None:
         """Handle SIGINT gracefully"""
-        self._log(f"handling signal {sig}")
-        self.notify_error(sig)
-        self.close_clients_gracefully()
-        self._log(f"closing worker {self.instance_id}")
+        self.handle_termination_gracefully(sig, frame)
