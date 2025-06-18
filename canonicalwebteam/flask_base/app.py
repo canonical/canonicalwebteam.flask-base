@@ -14,6 +14,7 @@ from canonicalwebteam.flask_base.context import (
     clear_trailing_slash,
 )
 from canonicalwebteam.flask_base.converters import RegexConverter
+from canonicalwebteam.flask_base.env import get_flask_env
 from canonicalwebteam.flask_base.middlewares.proxy_fix import ProxyFix
 from canonicalwebteam.yaml_responses.flask_helpers import (
     prepare_deleted,
@@ -204,13 +205,13 @@ class FlaskBase(flask.Flask):
         template_404=None,
         template_500=None,
         *args,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(name, *args, **kwargs)
 
         self.service = service
 
-        self.config["SECRET_KEY"] = os.environ["SECRET_KEY"]
+        self.config["SECRET_KEY"] = get_flask_env("SECRET_KEY")
 
         self.url_map.strict_slashes = False
         self.url_map.converters["regex"] = RegexConverter
