@@ -214,8 +214,13 @@ class FlaskBase(flask.Flask):
 
         self.service = service
 
-        self.config["SECRET_KEY"] = get_flask_env("SECRET_KEY")
+        # Ensure that either SECRET_KEY or FLASK_SECRET_KEY is set
+        self.config["SECRET_KEY"] = get_flask_env("SECRET_KEY", error=True)
+        # Load environment variables prefixed with 'FLASK_' into the
+        # environment as regular variables
         load_plain_env_variables()
+        # Load environment variables prefixed with 'FLASK_' into the config
+        self.config.from_prefixed_env()
 
         self.url_map.strict_slashes = False
         self.url_map.converters["regex"] = RegexConverter
