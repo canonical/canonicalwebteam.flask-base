@@ -24,6 +24,18 @@ app = FlaskBase(
 )
 ```
 
+### Environment variables
+
+Flask-base will automatically load `FLASK_` prefixed env variables, but these will only be available in the application after the app has been initialized. For setups that use a settings.py file, or that require env variables _before_ the app has been initialized, the following can be done instead to load the prefixed variables.
+
+```python3
+# webapp/settings.py
+from canonicalwebteam.flask_base.env import load_plain_env_variables
+load_plain_env_variables()
+
+SOME_ENV = os.getenv("SOME_ENV") 
+```
+
 ## Local development
 
 For local development, it's best to test this module with one of our website projects like [ubuntu.com](https://github.com/canonical-web-and-design/ubuntu.com/). For more information, follow [this guide (internal only)](https://discourse.canonical.com/t/how-to-run-our-python-modules-for-local-development/308).
