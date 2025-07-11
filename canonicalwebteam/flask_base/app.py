@@ -161,7 +161,7 @@ def set_compression_types(app, compress_mimetypes):
     """
 
     if compress_mimetypes:
-        app.config['COMPRESS_MIMETYPES'] = compress_mimetypes
+        app.config["COMPRESS_MIMETYPES"] = compress_mimetypes
     compress = Compress()
     compress.init_app(app)
 
