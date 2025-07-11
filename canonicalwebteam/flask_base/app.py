@@ -154,12 +154,40 @@ def set_clacks(response):
 
     return response
 
+DEFAULT_COMPRESS_MIMETYPES = [
+    'text/html',
+    'text/css',
+    'text/plain',
+    'text/xml',
+    'text/x-component',
+    'text/javascript',
+    'application/x-javascript',
+    'application/javascript',
+    'application/json',
+    'application/manifest+json',
+    'application/vnd.api+json',
+    'application/xml',
+    'application/xhtml+xml',
+    'application/rss+xml',
+    'application/atom+xml',
+    'application/vnd.ms-fontobject',
+    'application/x-font-ttf',
+    'application/x-font-opentype',
+    'application/x-font-truetype',
+    'image/svg+xml',
+    'image/x-icon',
+    'image/vnd.microsoft.icon',
+    'font/ttf',
+    'font/eot',
+    'font/otf',
+    'font/opentype',
+]
 
-def set_compression_types(app):
+def set_compression_types(app, compress_mimetypes):
     """
     Set the file types that should be compressed.
     """
-
+    app.config['COMPRESS_MIMETYPES'] = compress_mimetypes or DEFAULT_COMPRESS_MIMETYPES
     compress = Compress()
     compress.init_app(app)
 
@@ -207,6 +235,7 @@ class FlaskBase(flask.Flask):
         favicon_url=None,
         template_404=None,
         template_500=None,
+        compress_mimetypes=(),
         *args,
         **kwargs,
     ):
@@ -333,4 +362,4 @@ class FlaskBase(flask.Flask):
             def security():
                 return flask.send_file(security_path)
 
-        set_compression_types(self)
+        set_compression_types(self, compress_mimetypes)
