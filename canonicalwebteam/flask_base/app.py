@@ -154,40 +154,14 @@ def set_clacks(response):
 
     return response
 
-DEFAULT_COMPRESS_MIMETYPES = [
-    'text/html',
-    'text/css',
-    'text/plain',
-    'text/xml',
-    'text/x-component',
-    'text/javascript',
-    'application/x-javascript',
-    'application/javascript',
-    'application/json',
-    'application/manifest+json',
-    'application/vnd.api+json',
-    'application/xml',
-    'application/xhtml+xml',
-    'application/rss+xml',
-    'application/atom+xml',
-    'application/vnd.ms-fontobject',
-    'application/x-font-ttf',
-    'application/x-font-opentype',
-    'application/x-font-truetype',
-    'image/svg+xml',
-    'image/x-icon',
-    'image/vnd.microsoft.icon',
-    'font/ttf',
-    'font/eot',
-    'font/otf',
-    'font/opentype',
-]
 
 def set_compression_types(app, compress_mimetypes):
     """
     Set the file types that should be compressed.
     """
-    app.config['COMPRESS_MIMETYPES'] = compress_mimetypes or DEFAULT_COMPRESS_MIMETYPES
+
+    if compress_mimetypes:
+        app.config['COMPRESS_MIMETYPES'] = compress_mimetypes
     compress = Compress()
     compress.init_app(app)
 
