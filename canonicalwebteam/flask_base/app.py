@@ -4,7 +4,6 @@ import os
 
 # Packages
 import flask
-import talisker.flask
 from flask_compress import Compress
 from werkzeug.debug import DebuggedApplication
 
@@ -23,8 +22,6 @@ from canonicalwebteam.yaml_responses.flask_helpers import (
     prepare_deleted,
     prepare_redirects,
 )
-
-STATUS_CHECK = os.getenv("TALISKER_REVISION_ID", "OK")
 
 
 def set_security_headers(response):
@@ -259,11 +256,6 @@ class FlaskBase(flask.Flask):
 
         self.context_processor(base_context)
 
-        talisker.flask.register(self)
-        talisker.logs.set_global_extra(
-            {"service": self.service, "pid": os.getpid()}
-        )
-
         # Default error handlers
         if template_404:
 
@@ -295,7 +287,7 @@ class FlaskBase(flask.Flask):
         # Default routes
         @self.route("/_status/check")
         def status_check():
-            return STATUS_CHECK
+            return "OK"
 
         favicon_path = os.path.join(self.root_path, "../static", "favicon.ico")
         if os.path.isfile(favicon_path):
