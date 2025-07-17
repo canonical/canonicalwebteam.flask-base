@@ -1,9 +1,12 @@
 # Standard library
 import hashlib
+import time
 import os
+import logging
 
 # Packages
 import flask
+from flask import Flask, g, request
 from flask_compress import Compress
 from werkzeug.debug import DebuggedApplication
 
@@ -22,6 +25,9 @@ from canonicalwebteam.yaml_responses.flask_helpers import (
     prepare_deleted,
     prepare_redirects,
 )
+from canonicalwebteam.flask_base.metrics import RequestsMetrics
+
+logger = logging.getLogger(__name__)
 
 
 def set_security_headers(response):
@@ -159,6 +165,47 @@ def set_compression_types(app):
 
     compress = Compress()
     compress.init_app(app)
+
+
+def register_metrics(app: Flask):
+    """
+    Register per route metrics for the Flask application.
+    This will track the number of requests, their latency, and errors.
+    """
+
+    @app.before_request
+    def start_timer():
+        g.start_time = time.time()
+
+    @app.after_request
+    def record_metrics(response):
+        duration_ms = (time.time() - g.get("start_time", time.time())) * 1000
+
+        labels = {
+            "view": request.endpoint or "unknown",
+            "method": request.method,
+            "status": str(response.status_code),
+        }
+
+        RequestsMetrics.requests.inc(1, **labels)
+        RequestsMetrics.latency.observe(duration_ms, **labels)
+
+        return response
+
+    @app.teardown_request
+    def handle_teardown(exception):
+        if exception:
+            # log 5xx errors
+            status_code = getattr(exception, "code", 500)
+
+            labels = {
+                "view": request.endpoint or "unknown",
+                "method": request.method,
+                "status": str(status_code),
+            }
+
+            if status_code >= 500:
+                RequestsMetrics.errors.inc(1, **labels)
 
 
 class FlaskBase(flask.Flask):
@@ -327,3 +374,4 @@ class FlaskBase(flask.Flask):
                 return flask.send_file(security_path)
 
         set_compression_types(self)
+        register_metrics(self)

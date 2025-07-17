@@ -28,7 +28,6 @@ def cwd(path):
 
 
 class TestFlaskBase(unittest.TestCase):
-
     def create_app(self, debug=False):
         if debug:
             os.environ["FLASK_DEBUG"] = "true"
