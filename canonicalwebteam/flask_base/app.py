@@ -216,6 +216,7 @@ class FlaskBase(flask.Flask):
 
         # Ensure that either SECRET_KEY or FLASK_SECRET_KEY is set
         self.config["SECRET_KEY"] = get_flask_env("SECRET_KEY", error=True)
+        self.config["SENTRY_DSN"] = get_flask_env("SENTRY_DSN", error=True)
         # Load environment variables prefixed with 'FLASK_' into the
         # environment as regular variables
         load_plain_env_variables()
