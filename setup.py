@@ -30,7 +30,7 @@ setup(
         "canonicalwebteam.yaml-responses[flask] (>=1,<2)",
         "talisker[gunicorn,gevent,flask,prometheus,raven] >= 0.21.4",
         # TODO: Remove this once Flask is updated to 3.x.x
-        "Werkzeug < 3.0.0",
+        "Werkzeug <3.0.7",
         # Use latest version of Flask once Talisker supports werkzeug >=3
         "flask==2.3.3",
         "flask-compress==1.17",
