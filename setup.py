@@ -30,6 +30,7 @@ setup(
         "canonicalwebteam.yaml-responses[flask] (>=1,<2)",
         "Werkzeug > 3.0.0",
         "flask==3.1.1",
+        "sentry_sdk[flask]==2.33.2",
         "gunicorn==23.0.0",
         "gevent==25.5.1",
         "statsd==4.0.1",
