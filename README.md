@@ -30,6 +30,15 @@ For local development, it's best to test this module with one of our website pro
 
 ## Features
 
+### Sentry integration
+
+if `SENTRY_DSN` is set in the environment, FlaskBase will automatically initialize Sentry with the provided DSN. This allows you to capture errors and performance metrics in your Flask application.
+
+### Per route metrics
+
+If a statsd-client is configured (which is enabled by default with 12f apps), FlaskBase will automatically add per route metrics. Including error counts, request counts, and response times.
+
+
 ### ProxyFix
 
 FlaskBase includes [ProxyFix](https://werkzeug.palletsprojects.com/en/3.0.x/middleware/proxy_fix/) to avoid SSL stripping on redirects.
@@ -113,6 +122,11 @@ gunicorn webapp.app:app \
     -k canonicalwebteam.flask_base.worker.LogWorker
 ```
 
+### Planned features
+
+- Add support for open telemetry tracing. Using opentelemetry-instrumentation-flask and opentelemetry-exporter-otlp.
+
 ## Tests
 
 To run the tests execute `SECRET_KEY=fake python3 -m unittest discover tests`.
+
