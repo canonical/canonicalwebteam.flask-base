@@ -33,7 +33,7 @@ setup(
         "gunicorn",
         "gevent",
         "statsd",
-        "flask-compress==1.17",
+        "flask-compress==1.18",
     ],
     dependency_links=[],
     include_package_data=True,
