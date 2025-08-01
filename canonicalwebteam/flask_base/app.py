@@ -1,10 +1,12 @@
 # Standard library
 import hashlib
+import time
 import os
+import logging
 
 # Packages
 import flask
-import talisker.flask
+from flask import Flask, g, request
 from flask_compress import Compress
 from werkzeug.debug import DebuggedApplication
 
@@ -23,8 +25,9 @@ from canonicalwebteam.yaml_responses.flask_helpers import (
     prepare_deleted,
     prepare_redirects,
 )
+from canonicalwebteam.flask_base.metrics import RequestsMetrics
 
-STATUS_CHECK = os.getenv("TALISKER_REVISION_ID", "OK")
+logger = logging.getLogger(__name__)
 
 
 def set_security_headers(response):
@@ -164,6 +167,47 @@ def set_compression_types(app):
     compress.init_app(app)
 
 
+def register_metrics(app: Flask):
+    """
+    Register per route metrics for the Flask application.
+    This will track the number of requests, their latency, and errors.
+    """
+
+    @app.before_request
+    def start_timer():
+        g.start_time = time.time()
+
+    @app.after_request
+    def record_metrics(response):
+        duration_ms = (time.time() - g.get("start_time", time.time())) * 1000
+
+        labels = {
+            "view": request.endpoint or "unknown",
+            "method": request.method,
+            "status": str(response.status_code),
+        }
+
+        RequestsMetrics.requests.inc(1, **labels)
+        RequestsMetrics.latency.observe(duration_ms, **labels)
+
+        return response
+
+    @app.teardown_request
+    def handle_teardown(exception):
+        if exception:
+            # log 5xx errors
+            status_code = getattr(exception, "code", 500)
+
+            labels = {
+                "view": request.endpoint or "unknown",
+                "method": request.method,
+                "status": str(status_code),
+            }
+
+            if status_code >= 500:
+                RequestsMetrics.errors.inc(1, **labels)
+
+
 class FlaskBase(flask.Flask):
     def send_static_file(self, filename: str) -> "flask.wrappers.Response":
         """
@@ -216,7 +260,6 @@ class FlaskBase(flask.Flask):
 
         # Ensure that either SECRET_KEY or FLASK_SECRET_KEY is set
         self.config["SECRET_KEY"] = get_flask_env("SECRET_KEY", error=True)
-        self.config["SENTRY_DSN"] = get_flask_env("SENTRY_DSN")
         # Load environment variables prefixed with 'FLASK_' into the
         # environment as regular variables
         load_plain_env_variables()
@@ -259,11 +302,6 @@ class FlaskBase(flask.Flask):
 
         self.context_processor(base_context)
 
-        talisker.flask.register(self)
-        talisker.logs.set_global_extra(
-            {"service": self.service, "pid": os.getpid()}
-        )
-
         # Default error handlers
         if template_404:
 
@@ -295,7 +333,7 @@ class FlaskBase(flask.Flask):
         # Default routes
         @self.route("/_status/check")
         def status_check():
-            return STATUS_CHECK
+            return "OK"
 
         favicon_path = os.path.join(self.root_path, "../static", "favicon.ico")
         if os.path.isfile(favicon_path):
@@ -335,3 +373,4 @@ class FlaskBase(flask.Flask):
                 return flask.send_file(security_path)
 
         set_compression_types(self)
+        register_metrics(self)

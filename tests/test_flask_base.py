@@ -5,7 +5,6 @@ import warnings
 from contextlib import contextmanager
 
 # Packages
-import talisker.testing
 from werkzeug.debug import DebuggedApplication
 
 # Local modules
@@ -29,9 +28,6 @@ def cwd(path):
 
 
 class TestFlaskBase(unittest.TestCase):
-    def setUp(self):
-        talisker.testing.configure_testing()
-
     def create_app(self, debug=False):
         if debug:
             os.environ["FLASK_DEBUG"] = "true"
@@ -153,14 +149,6 @@ class TestFlaskBase(unittest.TestCase):
             deleted_response = client.get("deleted")
             self.assertEqual(410, deleted_response.status_code)
             self.assertEqual(deleted_response.data, b"Deleted")
-
-    def test_logs_service_name(self):
-        with talisker.testing.TestContext() as ctx:
-            app = self.create_app()
-            app.logger.info("Test")
-            ctx.assert_log(
-                msg="Test", extra={"service": "canonicalwebteam.flask-base"}
-            )
 
     def test_global_context(self):
         app = self.create_app()

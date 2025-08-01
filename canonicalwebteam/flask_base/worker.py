@@ -8,7 +8,7 @@ exiting.
 ## Usage
 Run gunicorn in the usual way, but specify the worker class as LogWorker.
 
-talisker.gunicorn.gevent webapp.app:app \
+gunicorn webapp.app:app \
     -k canonicalwebteam.flask_base.worker.LogWorker
 
 """

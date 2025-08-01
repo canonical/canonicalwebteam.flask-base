@@ -30,6 +30,11 @@ For local development, it's best to test this module with one of our website pro
 
 ## Features
 
+### Per route metrics
+
+If a statsd-client is configured (which is enabled by default with 12f apps), FlaskBase will automatically add per route metrics. Including error counts, request counts, and response times.
+
+
 ### ProxyFix
 
 FlaskBase includes [ProxyFix](https://werkzeug.palletsprojects.com/en/3.0.x/middleware/proxy_fix/) to avoid SSL stripping on redirects.
@@ -109,10 +114,15 @@ Included is a custom gunicorn gevent worker designed to handle SIGINT and SIGTER
 Run gunicorn in the usual way, but specify the worker class as LogWorker.
 
 ```bash
-talisker.gunicorn.gevent webapp.app:app \
+gunicorn webapp.app:app \
     -k canonicalwebteam.flask_base.worker.LogWorker
 ```
+
+### Planned features
+
+- Add support for open telemetry tracing. Using opentelemetry-instrumentation-flask and opentelemetry-exporter-otlp.
 
 ## Tests
 
 To run the tests execute `SECRET_KEY=fake python3 -m unittest discover tests`.
+

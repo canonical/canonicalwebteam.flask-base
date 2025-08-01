@@ -4,7 +4,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="canonicalwebteam.flask-base",
-    version="2.6.1",
+    version="3.0.0",
     description=(
         "Flask extension that applies common configurations"
         "to all of webteam's flask apps."
@@ -28,11 +28,11 @@ setup(
     packages=find_packages(),
     install_requires=[
         "canonicalwebteam.yaml-responses[flask] (>=1,<2)",
-        "talisker[gunicorn,gevent,flask,prometheus,raven] >= 0.21.4",
-        # TODO: Remove this once Flask is updated to 3.x.x
-        "Werkzeug < 3.0.0",
-        # Use latest version of Flask once Talisker supports werkzeug >=3
-        "flask==2.3.3",
+        "Werkzeug",
+        "flask",
+        "gunicorn",
+        "gevent",
+        "statsd",
         "flask-compress==1.17",
     ],
     dependency_links=[],
