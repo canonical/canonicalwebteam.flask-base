@@ -30,10 +30,6 @@ For local development, it's best to test this module with one of our website pro
 
 ## Features
 
-### Sentry integration
-
-if `SENTRY_DSN` is set in the environment, FlaskBase will automatically initialize Sentry with the provided DSN. This allows you to capture errors and performance metrics in your Flask application.
-
 ### Per route metrics
 
 If a statsd-client is configured (which is enabled by default with 12f apps), FlaskBase will automatically add per route metrics. Including error counts, request counts, and response times.

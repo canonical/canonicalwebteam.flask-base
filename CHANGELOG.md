@@ -1,3 +1,19 @@
+# 3.0.0 (2025-08-01)
+
+- Update to use the latest version of Flask, Werkzeug, gunicorn and gevent.
+- Completely remove talisker as a dependency.
+- Add per route metrics that report the number of requests, response time, and error rate. (These metrics will be picked up automatically by a statsd-server if you are using the 12f app charm)
+
+## Upgrade notes
+
+This version will require a few updates to remove talisker usage in your application. Namely:
+
+- In your `entrypoint` script, replace `talisker.gunicorn.gevent` with `gunicorn`.
+- Replace any instance of `talisker.requests` with `requests`.
+- Remove `TALISKER_REVISION_ID` from `Dockerfile`.
+- Remove any usage of talisker loggers.
+- Remove any usage of `app.extensions["sentry"]` as Sentry support was provided by talisker and is no longer available. You can use the `sentry-sdk` package directly to integrate Sentry into your Flask application.
+
 # 2.4.0 (2025-03-21)
 
 Fix Werkzeug version limit to work with current Flask `2.3.3`.

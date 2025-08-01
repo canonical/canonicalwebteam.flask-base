@@ -33,7 +33,6 @@ setup(
         "gunicorn",
         "gevent",
         "statsd",
-        "sentry_sdk[flask]==2.33.2",
         "flask-compress==1.17",
     ],
     dependency_links=[],

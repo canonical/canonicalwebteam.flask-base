@@ -6,10 +6,8 @@ import logging
 
 # Packages
 import flask
-import sentry_sdk
 from flask import Flask, g, request
 from flask_compress import Compress
-from sentry_sdk.integrations.flask import FlaskIntegration
 from werkzeug.debug import DebuggedApplication
 
 # Local modules
@@ -30,12 +28,6 @@ from canonicalwebteam.yaml_responses.flask_helpers import (
 from canonicalwebteam.flask_base.metrics import RequestsMetrics
 
 logger = logging.getLogger(__name__)
-
-sentry_dsn = get_flask_env("SENTRY_DSN")
-sentry_sdk.init(
-    dsn=sentry_dsn,
-    integrations=[FlaskIntegration()],
-)
 
 
 def set_security_headers(response):
@@ -268,7 +260,6 @@ class FlaskBase(flask.Flask):
 
         # Ensure that either SECRET_KEY or FLASK_SECRET_KEY is set
         self.config["SECRET_KEY"] = get_flask_env("SECRET_KEY", error=True)
-        self.config["SENTRY_DSN"] = get_flask_env("SENTRY_DSN")
         # Load environment variables prefixed with 'FLASK_' into the
         # environment as regular variables
         load_plain_env_variables()
