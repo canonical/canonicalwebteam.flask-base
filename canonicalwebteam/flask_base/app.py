@@ -26,8 +26,10 @@ from canonicalwebteam.yaml_responses.flask_helpers import (
     prepare_redirects,
 )
 from canonicalwebteam.flask_base.metrics import RequestsMetrics
-
-logger = logging.getLogger(__name__)
+from canonicalwebteam.flask_base.logging import (
+    setup_root_logger,
+    get_default_prod_handler,
+)
 
 
 def set_security_headers(response):
@@ -243,6 +245,22 @@ class FlaskBase(flask.Flask):
 
         # Now return the static file response
         return response
+    
+    def configure_logging(self, handler: logging.Handler | None = None):
+        setup_root_logger(self, handler)
+
+        if not self.debug:
+            # production mode, so we need to replace the handlers of gunicorn
+            gunicorn_error_log = logging.getLogger("gunicorn.error")
+            gunicorn_error_log.handlers.clear()
+            gunicorn_error_log.addHandler(
+                handler or get_default_prod_handler()
+            )
+            gunicorn_access_log = logging.getLogger("gunicorn.access")
+            gunicorn_access_log.handlers.clear()
+            gunicorn_access_log.addHandler(
+                handler or get_default_prod_handler()
+            )
 
     def __init__(
         self,
@@ -374,3 +392,4 @@ class FlaskBase(flask.Flask):
 
         set_compression_types(self)
         register_metrics(self)
+        self.configure_logging()

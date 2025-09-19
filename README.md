@@ -30,6 +30,38 @@ For local development, it's best to test this module with one of our website pro
 
 ## Features
 
+### Logging
+
+Logging is divided in 2 types depending on the environment:
+- Prod: uses a simple structured logging, that outputs JSON so that logs are searchable in tools like Grafana.
+- Dev: uses the Rich package to output logs to the terminal with colors to make them easier to look at.
+
+The logging configuration is set in the root logger, so every logger that you generate like this
+```python
+import logging
+logger = logging.getLogger(__name__)
+```
+will use by default the handler set for the root logger and will be output properly. This includes logs in
+3rd party packages too.
+
+The Gunicorn loggers are set up in a way that they don't use the root logger. If you want to get the same type 
+of logs than the rest you need to execute your application passing the 'logger-class' attribute:
+```bash
+gunicorn webapp.app:app --logger-class canonicalwebteam.flask_base.logging.GUnicornDevLogger ...
+```
+
+#### Configuring logging
+
+The logging defaults set are good for probably most of the cases and teams, but in case of specific needs 
+a method has been added to FlaskBase so that each project can configure logging to their liking. 
+You call it after initializing FlaskBase and you can pass a logging.Handler that outputs logs the way 
+you desire. Example:
+```python
+app = FlaskBase(...)
+app.setup_logging(myHandler)
+```
+
+
 ### Per route metrics
 
 If a statsd-client is configured (which is enabled by default with 12f apps), FlaskBase will automatically add per route metrics. Including error counts, request counts, and response times.

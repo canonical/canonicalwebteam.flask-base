@@ -34,6 +34,8 @@ setup(
         "gevent",
         "statsd",
         "flask-compress==1.17",
+        "rich",
+        "python-json-logger",
     ],
     dependency_links=[],
     include_package_data=True,
