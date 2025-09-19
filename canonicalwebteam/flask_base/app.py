@@ -245,7 +245,7 @@ class FlaskBase(flask.Flask):
 
         # Now return the static file response
         return response
-    
+
     def configure_logging(self, handler: logging.Handler | None = None):
         setup_root_logger(self, handler)
 

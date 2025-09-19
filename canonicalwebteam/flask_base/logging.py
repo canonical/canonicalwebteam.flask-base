@@ -12,6 +12,7 @@ from gunicorn.glogging import Logger as GunicornLogger
 
 DEFAULT_DEV_FORMAT = "[%(name)s] [%(threadName)s] %(message)s"
 
+
 def _date_format_with_ms(dt: datetime.datetime):
     return dt.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
 
@@ -21,6 +22,7 @@ class ExtraRichFormatter(logging.Formatter):
     This formatter takes care of printing the dictionary passed as 'extra' to
     the logging calls.
     """
+
     RESERVED_ATTRS: List[str] = [
         "args",
         "asctime",
@@ -80,20 +82,23 @@ class GUnicornDevLogger(GunicornLogger):
 
     def __init__(self, cfg):
         super().__init__(cfg)
-    
+
     def setup(self, _):
         self.error_log.addHandler(get_default_dev_handler())
         access_handler = RichHandler(
             omit_repeated_times=False,
             log_time_format=_date_format_with_ms,
         )
-        access_handler.setFormatter(logging.Formatter(
-            fmt=DEFAULT_DEV_FORMAT,
-        ))
+        access_handler.setFormatter(
+            logging.Formatter(
+                fmt=DEFAULT_DEV_FORMAT,
+            )
+        )
         self.access_log.addHandler(access_handler)
 
 
 # Handlers (just one of each)
+
 
 @lru_cache(maxsize=1)
 def get_default_dev_handler() -> logging.Handler:
@@ -112,6 +117,7 @@ def get_default_dev_handler() -> logging.Handler:
         )
     )
     return rich_handler
+
 
 @lru_cache(maxsize=1)
 def get_default_prod_handler() -> logging.Handler:
