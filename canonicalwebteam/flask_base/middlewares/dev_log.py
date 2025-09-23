@@ -53,9 +53,5 @@ class DevLogWSGI:
         Modify the WSGI environ to update the "wsgi.errors" output stream
         for a Rich equivalent that prettifies the text.
         """
-        environ_get = environ.get
-        error_stream = environ_get("wsgi.errors")
-
         environ["wsgi.errors"] = rich_wsgi_errors_wrapper
-
         return self.app(environ, start_response)

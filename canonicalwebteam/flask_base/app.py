@@ -9,8 +9,6 @@ import flask
 from flask import Flask, g, request
 from flask_compress import Compress
 from werkzeug.debug import DebuggedApplication
-from rich.console import Console
-from rich.traceback import Traceback
 
 # Local modules
 from canonicalwebteam.flask_base.context import (
@@ -212,9 +210,6 @@ def register_metrics(app: Flask):
 
             if status_code >= 500:
                 RequestsMetrics.errors.inc(1, **labels)
-
-
-console = Console()
 
 
 class FlaskBase(flask.Flask):

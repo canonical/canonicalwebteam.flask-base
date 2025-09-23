@@ -6,7 +6,6 @@ from functools import lru_cache
 
 from flask import Flask
 from rich.logging import RichHandler
-from rich.traceback import install as installRichTraceback
 from pythonjsonlogger.json import JsonFormatter
 from gunicorn.glogging import Logger as GunicornLogger
 
@@ -149,8 +148,6 @@ def setup_root_logger(app: Flask, handler: logging.Handler | None = None):
     if handler is not None:
         root_handler = handler
     if is_debug_environment():
-        # With this we get rich pretty printing for all gunicorn uncaught exceptions
-        installRichTraceback(show_locals=True)
         root_handler = get_default_dev_handler()
         root_logger.setLevel(logging.DEBUG)
     else:
