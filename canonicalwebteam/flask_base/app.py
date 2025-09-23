@@ -294,10 +294,10 @@ class FlaskBase(flask.Flask):
         self.url_map.converters["regex"] = RegexConverter
 
         if self.debug:
-            self.wsgi_app = DebuggedApplication(self.wsgi_app)
             # needed to get pretty traces from Werkzeug, which writes directly
             # to the error stream without using logging
             self.wsgi_app = DevLogWSGI(self.wsgi_app)
+            self.wsgi_app = DebuggedApplication(self.wsgi_app)
 
         self.wsgi_app = ProxyFix(self.wsgi_app)
 
