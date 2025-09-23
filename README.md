@@ -53,12 +53,10 @@ gunicorn webapp.app:app --logger-class canonicalwebteam.flask_base.logging.GUnic
 #### Configuring logging
 
 The logging defaults set are good for probably most of the cases and teams, but in case of specific needs 
-a method has been added to FlaskBase so that each project can configure logging to their liking. 
-You call it after initializing FlaskBase and you can pass a logging.Handler that outputs logs the way 
-you desire. Example:
+you can pass to FlaskBase a 'handler' object so that each project can configure logging to their liking. 
+The 'handler' has to be of type logging.Handler. Example:
 ```python
-app = FlaskBase(...)
-app.setup_logging(myHandler)
+app = FlaskBase(..., handler=myHandler)
 ```
 
 

@@ -9,6 +9,8 @@ import flask
 from flask import Flask, g, request
 from flask_compress import Compress
 from werkzeug.debug import DebuggedApplication
+from rich.console import Console
+from rich.traceback import Traceback
 
 # Local modules
 from canonicalwebteam.flask_base.context import (
@@ -20,15 +22,17 @@ from canonicalwebteam.flask_base.env import (
     get_flask_env,
     load_plain_env_variables,
 )
+from canonicalwebteam.flask_base.middlewares.dev_log import DevLogWSGI
 from canonicalwebteam.flask_base.middlewares.proxy_fix import ProxyFix
-from canonicalwebteam.yaml_responses.flask_helpers import (
-    prepare_deleted,
-    prepare_redirects,
-)
 from canonicalwebteam.flask_base.metrics import RequestsMetrics
 from canonicalwebteam.flask_base.logging import (
     setup_root_logger,
     get_default_prod_handler,
+    is_debug_environment,
+)
+from canonicalwebteam.yaml_responses.flask_helpers import (
+    prepare_deleted,
+    prepare_redirects,
 )
 
 
@@ -210,6 +214,9 @@ def register_metrics(app: Flask):
                 RequestsMetrics.errors.inc(1, **labels)
 
 
+console = Console()
+
+
 class FlaskBase(flask.Flask):
     def send_static_file(self, filename: str) -> "flask.wrappers.Response":
         """
@@ -249,7 +256,9 @@ class FlaskBase(flask.Flask):
     def configure_logging(self, handler: logging.Handler | None = None):
         setup_root_logger(self, handler)
 
-        if not self.debug:
+        # this method should be called before initializing the class, so we
+        # don't have access to self.debug class variable yet
+        if not is_debug_environment():
             # production mode, so we need to replace the handlers of gunicorn
             gunicorn_error_log = logging.getLogger("gunicorn.error")
             gunicorn_error_log.handlers.clear()
@@ -274,6 +283,8 @@ class FlaskBase(flask.Flask):
     ):
         super().__init__(name, *args, **kwargs)
 
+        self.configure_logging(kwargs.get("handler"))
+
         self.service = service
 
         # Ensure that either SECRET_KEY or FLASK_SECRET_KEY is set
@@ -289,6 +300,9 @@ class FlaskBase(flask.Flask):
 
         if self.debug:
             self.wsgi_app = DebuggedApplication(self.wsgi_app)
+            # needed to get pretty traces from Werkzeug, which writes directly
+            # to the error stream without using logging
+            self.wsgi_app = DevLogWSGI(self.wsgi_app)
 
         self.wsgi_app = ProxyFix(self.wsgi_app)
 
@@ -392,4 +406,3 @@ class FlaskBase(flask.Flask):
 
         set_compression_types(self)
         register_metrics(self)
-        self.configure_logging()
