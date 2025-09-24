@@ -20,16 +20,19 @@ class RichWSGIErrorsWrapper(io.RawIOBase):
 
     def write(self, data):
         """
-        This method should be called mainly to print stack traces.
+        This method is called mainly to print stack traces.
         Used by Werkzeug here:
         https://github.com/pallets/werkzeug/blob/main/src/werkzeug/debug/__init__.py#L381
         """
         rich_render = None
         try:
+            # We try to create a Rich Traceback. This method will fail with a
+            # ValueError exception if we are not in a "except" block
             traceback = Traceback(show_locals=True)
             rich_render = traceback
         except ValueError:
             # Someone tried to write outside of a except block
+            # In this case we just print the data string passed as Text
             rich_render = Text(data)
 
         self.__console.print(rich_render)

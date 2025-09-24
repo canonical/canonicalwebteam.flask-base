@@ -12,7 +12,7 @@ from gunicorn.glogging import Logger as GunicornLogger
 from canonicalwebteam.flask_base.env import get_flask_env
 
 
-DEFAULT_DEV_FORMAT = "[%(name)s] [%(threadName)s] %(message)s"
+DEFAULT_DEV_FORMAT = "[%(name)s] %(message)s"
 
 
 def _date_format_with_ms(dt: datetime.datetime):
@@ -25,6 +25,9 @@ class ExtraRichFormatter(logging.Formatter):
     the logging calls.
     """
 
+    # Obtained from Python's documentation and python-json-logger
+    # https://docs.python.org/3/library/logging.html#logrecord-attributes
+    # https://github.com/nhairs/python-json-logger/blob/main/src/pythonjsonlogger/core.py
     RESERVED_ATTRS: List[str] = [
         "args",
         "asctime",
@@ -48,6 +51,7 @@ class ExtraRichFormatter(logging.Formatter):
         "stack_info",
         "thread",
         "threadName",
+        "taskName",
     ]
 
     def __init__(self, fmt=None, datefmt=None):
@@ -61,7 +65,7 @@ class ExtraRichFormatter(logging.Formatter):
             return f"{message}\n{json_str}"
         return message
 
-    def _get_extra_dict(self, record: logging.LogRecord) -> dict | None:
+    def _get_extra_dict(self, record: logging.LogRecord) -> dict:
         extra_dict = {}
         for key, value in record.__dict__.items():
             if (
@@ -70,10 +74,10 @@ class ExtraRichFormatter(logging.Formatter):
             ):
                 extra_dict[key] = value
 
-        return None if len(extra_dict) == 0 else extra_dict
+        return extra_dict
 
 
-class GUnicornDevLogger(GunicornLogger):
+class GunicornDevLogger(GunicornLogger):
     """
     This logger use is optional and serves to display Gunicorn logs in the
     same style as the default development application logs.
@@ -85,18 +89,16 @@ class GUnicornDevLogger(GunicornLogger):
     def __init__(self, cfg):
         super().__init__(cfg)
 
-    def setup(self, _):
-        self.error_log.addHandler(get_default_dev_handler())
-        access_handler = RichHandler(
-            omit_repeated_times=False,
-            log_time_format=_date_format_with_ms,
-        )
-        access_handler.setFormatter(
-            logging.Formatter(
-                fmt=DEFAULT_DEV_FORMAT,
-            )
-        )
-        self.access_log.addHandler(access_handler)
+    def setup(self, cfg):
+        super().setup(cfg)
+        self._substitute_stream_by_rich(self.error_log)
+        self._substitute_stream_by_rich(self.access_log)
+
+    def _substitute_stream_by_rich(self, logger):
+        for handler in list(logger.handlers):
+            if isinstance(handler, logging.StreamHandler):
+                logger.removeHandler(handler)
+                logger.addHandler(get_default_dev_handler())
 
 
 # Handlers (just one of each)
@@ -135,9 +137,7 @@ def get_default_prod_handler() -> logging.Handler:
 @lru_cache(maxsize=1)
 def is_debug_environment():
     debug_value = get_flask_env("DEBUG")
-    if debug_value is not None:
-        return debug_value.lower() == "true"
-    return False
+    return debug_value is not None and debug_value.lower() == "true"
 
 
 def setup_root_logger(app: Flask, handler: logging.Handler | None = None):
@@ -147,7 +147,7 @@ def setup_root_logger(app: Flask, handler: logging.Handler | None = None):
 
     if handler is not None:
         root_handler = handler
-    if is_debug_environment():
+    elif is_debug_environment():
         root_handler = get_default_dev_handler()
         root_logger.setLevel(logging.DEBUG)
     else:
