@@ -129,7 +129,11 @@ def get_default_prod_handler() -> logging.Handler:
     Handler to be used in production. Provides structured JSON logging.
     """
     log_handler = logging.StreamHandler()
-    formatter = JsonFormatter()
+    formatter = JsonFormatter(
+        # the order of the format string doesn't matter
+        # it just needs to include the fields that you want in the output
+        fmt="%(levelname)s:%(asctime)s:%(message)s",
+    )
     log_handler.setFormatter(formatter)
     return log_handler
 
