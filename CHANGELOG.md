@@ -4,6 +4,7 @@
 - Add JSON structured logs to Production mode.
 - The logging "extra" argument can be used to print JSON data out into the logs.
 - Custom logging.Handler can be passed to FlaskBase to personalize log output.
+- Traces added to logs if observability is enabled.
 
 ## Upgrade notes
 
