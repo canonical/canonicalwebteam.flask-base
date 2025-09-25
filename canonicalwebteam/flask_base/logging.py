@@ -1,15 +1,17 @@
 import logging
 import datetime
 import json
+import time
 from typing import List
 from functools import lru_cache
 
-from flask import Flask
+from flask import Flask, has_request_context
 from rich.logging import RichHandler
 from pythonjsonlogger.json import JsonFormatter
 from gunicorn.glogging import Logger as GunicornLogger
 
 from canonicalwebteam.flask_base.env import get_flask_env
+from canonicalwebteam.flask_base.observability import get_trace_id
 
 
 DEFAULT_DEV_FORMAT = "[%(name)s] %(message)s"
@@ -17,6 +19,32 @@ DEFAULT_DEV_FORMAT = "[%(name)s] %(message)s"
 
 def _date_format_with_ms(dt: datetime.datetime):
     return dt.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+
+
+class RequestFilter(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        trace_id = get_trace_id()
+        if trace_id:
+            record.trace_id = trace_id
+        return True
+
+
+class ProdRequestFilter(RequestFilter):
+    def __init__(self, datefmt: str | None = None):
+        self.datefmt = datefmt or logging.Formatter.default_time_format
+        self.msecfmt = str(logging.Formatter.default_msec_format)
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        super().filter(record)
+        record.timestamp = self._format_timestamp(record)
+        record.level = record.levelname
+        return True
+
+    def _format_timestamp(self, record: logging.LogRecord):
+        date_hour = time.strftime(
+            self.datefmt, time.localtime(record.created)
+        )
+        return self.msecfmt % (date_hour, record.msecs)
 
 
 class ExtraRichFormatter(logging.Formatter):
@@ -120,6 +148,7 @@ def get_default_dev_handler() -> logging.Handler:
             fmt=DEFAULT_DEV_FORMAT,
         )
     )
+    rich_handler.addFilter(RequestFilter())
     return rich_handler
 
 
@@ -132,9 +161,12 @@ def get_default_prod_handler() -> logging.Handler:
     formatter = JsonFormatter(
         # the order of the format string doesn't matter
         # it just needs to include the fields that you want in the output
-        fmt="%(levelname)s:%(asctime)s:%(message)s",
+        # this is just for the default LogRecord attributes
+        # for custom ones like "timestamp" check the RequestFilter class
+        fmt="%(levelname)s:%(message)s",
     )
     log_handler.setFormatter(formatter)
+    log_handler.addFilter(ProdRequestFilter())
     return log_handler
 
 

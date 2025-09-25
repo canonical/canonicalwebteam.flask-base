@@ -1,12 +1,10 @@
 # Standard library
 import hashlib
-import time
 import os
 import logging
 
 # Packages
 import flask
-from flask import Flask, g, request
 from flask_compress import Compress
 from werkzeug.debug import DebuggedApplication
 
@@ -20,13 +18,16 @@ from canonicalwebteam.flask_base.env import (
     get_flask_env,
     load_plain_env_variables,
 )
-from canonicalwebteam.flask_base.middlewares.dev_log import DevLogWSGI
-from canonicalwebteam.flask_base.middlewares.proxy_fix import ProxyFix
-from canonicalwebteam.flask_base.metrics import RequestsMetrics
 from canonicalwebteam.flask_base.logging import (
     setup_root_logger,
     get_default_prod_handler,
     is_debug_environment,
+)
+from canonicalwebteam.flask_base.middlewares.dev_log import DevLogWSGI
+from canonicalwebteam.flask_base.middlewares.proxy_fix import ProxyFix
+from canonicalwebteam.flask_base.observability import (
+    register_metrics,
+    register_trace,
 )
 from canonicalwebteam.yaml_responses.flask_helpers import (
     prepare_deleted,
@@ -171,47 +172,6 @@ def set_compression_types(app):
     compress.init_app(app)
 
 
-def register_metrics(app: Flask):
-    """
-    Register per route metrics for the Flask application.
-    This will track the number of requests, their latency, and errors.
-    """
-
-    @app.before_request
-    def start_timer():
-        g.start_time = time.time()
-
-    @app.after_request
-    def record_metrics(response):
-        duration_ms = (time.time() - g.get("start_time", time.time())) * 1000
-
-        labels = {
-            "view": request.endpoint or "unknown",
-            "method": request.method,
-            "status": str(response.status_code),
-        }
-
-        RequestsMetrics.requests.inc(1, **labels)
-        RequestsMetrics.latency.observe(duration_ms, **labels)
-
-        return response
-
-    @app.teardown_request
-    def handle_teardown(exception):
-        if exception:
-            # log 5xx errors
-            status_code = getattr(exception, "code", 500)
-
-            labels = {
-                "view": request.endpoint or "unknown",
-                "method": request.method,
-                "status": str(status_code),
-            }
-
-            if status_code >= 500:
-                RequestsMetrics.errors.inc(1, **labels)
-
-
 class FlaskBase(flask.Flask):
     def send_static_file(self, filename: str) -> "flask.wrappers.Response":
         """
@@ -302,7 +262,6 @@ class FlaskBase(flask.Flask):
         self.wsgi_app = ProxyFix(self.wsgi_app)
 
         self.before_request(clear_trailing_slash)
-
         self.before_request(
             prepare_redirects(
                 path=os.path.join(self.root_path, "..", "redirects.yaml")
@@ -401,3 +360,4 @@ class FlaskBase(flask.Flask):
 
         set_compression_types(self)
         register_metrics(self)
+        register_trace(self)

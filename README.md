@@ -68,6 +68,19 @@ The 'handler' has to be of type logging.Handler. Example:
 app = FlaskBase(..., handler=myHandler)
 ```
 
+### Tracing
+
+If observability is enabled in the project then you can get the trace ID of a request using
+```python
+from canonicalwebteam.flask_base.observability import get_trace_id
+trace_id = get_trace_id()
+```
+
+The trace ID will also be added by default to all the logs your application prints when it is
+available.
+
+Observability is enabled by default when setting up the appropriate relations for an application
+that uses [paas-charm](https://github.com/canonical/paas-charm/blob/main/src/paas_charm/templates/gunicorn.conf.py.j2).
 
 ### Per route metrics
 
