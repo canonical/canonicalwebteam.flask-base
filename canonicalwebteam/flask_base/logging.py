@@ -5,7 +5,7 @@ import time
 from typing import List
 from functools import lru_cache
 
-from flask import Flask, has_request_context
+from flask import Flask
 from rich.logging import RichHandler
 from pythonjsonlogger.json import JsonFormatter
 from gunicorn.glogging import Logger as GunicornLogger
@@ -41,10 +41,8 @@ class ProdRequestFilter(RequestFilter):
         return True
 
     def _format_timestamp(self, record: logging.LogRecord):
-        date_hour = time.strftime(
-            self.datefmt, time.localtime(record.created)
-        )
-        return self.msecfmt % (date_hour, record.msecs)
+        time_str = time.strftime(self.datefmt, time.localtime(record.created))
+        return self.msecfmt % (time_str, record.msecs)
 
 
 class ExtraRichFormatter(logging.Formatter):

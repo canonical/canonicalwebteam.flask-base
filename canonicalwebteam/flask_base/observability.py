@@ -55,6 +55,7 @@ def register_metrics(app: Flask):
 # https://github.com/canonical/paas-charm/blob/main/src/paas_charm/templates/gunicorn.conf.py.j2#L17
 # Then Gunicorn can be run and passed the configuration file path with "-c"
 
+
 def get_trace_id():
     span = get_current_span()
     ctx = span.get_span_context()
