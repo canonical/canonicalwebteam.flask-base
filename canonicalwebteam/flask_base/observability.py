@@ -1,9 +1,21 @@
 import time
+from os import environ
+from typing import List, TYPE_CHECKING
 
 from flask import Flask, g, request
-from opentelemetry.context import attach, detach
-from opentelemetry.trace import get_current_span
-from opentelemetry import propagate
+
+# If environment variable OTEL_SERVICE_NAME is available then we import
+# Anyway the monkey patching done by opentelemetry should be done much before
+# Ideally in the post_fork() method from gunicorn:
+# https://github.com/canonical/paas-charm/blob/main/src/paas_charm/templates/gunicorn.conf.py.j2#L17
+TRACING_ENABLED = environ.get("OTEL_SERVICE_NAME", False)
+
+if TRACING_ENABLED or TYPE_CHECKING:
+    from opentelemetry import propagate, trace
+    from opentelemetry.context import attach, detach
+    from opentelemetry.instrumentation.requests import RequestsInstrumentor
+    from opentelemetry.instrumentation.flask import FlaskInstrumentor
+    from opentelemetry.trace import get_current_span, Span
 
 from canonicalwebteam.flask_base.metrics import RequestsMetrics
 
@@ -57,21 +69,31 @@ def register_metrics(app: Flask):
 
 
 def get_trace_id():
-    span = get_current_span()
-    ctx = span.get_span_context()
-    if ctx and ctx.trace_id != 0:
-        return format(ctx.trace_id, "032x")
+    if TRACING_ENABLED:
+        span = get_current_span()
+        ctx = span.get_span_context()
+        if ctx and ctx.trace_id != 0:
+            return format(ctx.trace_id, "032x")
     return None
 
 
-def register_trace(app: Flask):
+def register_traces(app: Flask, untraced_routes: List[str]):
+    if not TRACING_ENABLED:
+        return
+
     # OpenTelemetry tracing
-    @app.after_request
-    def add_trace_id_header(response):
-        trace_id = get_trace_id()
-        if trace_id:
-            response.headers["X-Request-ID"] = trace_id
-        return response
+    tracer = trace.get_tracer(app.name)
+
+    def request_hook(span: Span, environ):
+        if span and span.is_recording():
+            span.update_name(f"{environ['REQUEST_METHOD']} {environ['PATH_INFO']}")
+
+    # Add tracing auto instrumentation
+    FlaskInstrumentor().instrument_app(
+        app, excluded_urls=",".join(untraced_routes), request_hook=request_hook
+    )
+    RequestsInstrumentor().instrument()
+
 
     @app.before_request
     def extract_trace_context():
@@ -81,6 +103,13 @@ def register_trace(app: Flask):
             carrier = {"traceparent": traceparent}
             context = propagate.extract(carrier)
             g._otel_token = attach(context)
+
+    @app.after_request
+    def add_trace_id_header(response):
+        trace_id = get_trace_id()
+        if trace_id:
+            response.headers["X-Request-ID"] = trace_id
+        return response
 
     @app.teardown_request
     def detach_trace_context(exception=None):

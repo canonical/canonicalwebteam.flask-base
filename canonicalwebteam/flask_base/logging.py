@@ -1,13 +1,12 @@
 import logging
 import datetime
 import json
-import time
-from typing import List
 from functools import lru_cache
 
 from flask import Flask
 from rich.logging import RichHandler
 from pythonjsonlogger.json import JsonFormatter
+from pythonjsonlogger.core import RESERVED_ATTRS
 from gunicorn.glogging import Logger as GunicornLogger
 
 from canonicalwebteam.flask_base.env import get_flask_env
@@ -17,7 +16,7 @@ from canonicalwebteam.flask_base.observability import get_trace_id
 DEFAULT_DEV_FORMAT = "[%(name)s] %(message)s"
 
 
-def _date_format_with_ms(dt: datetime.datetime):
+def _date_format_with_ms(dt: datetime.datetime) -> str:
     return dt.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
 
 
@@ -29,56 +28,11 @@ class RequestFilter(logging.Filter):
         return True
 
 
-class ProdRequestFilter(RequestFilter):
-    def __init__(self, datefmt: str | None = None):
-        self.datefmt = datefmt or logging.Formatter.default_time_format
-        self.msecfmt = str(logging.Formatter.default_msec_format)
-
-    def filter(self, record: logging.LogRecord) -> bool:
-        super().filter(record)
-        record.timestamp = self._format_timestamp(record)
-        record.level = record.levelname
-        return True
-
-    def _format_timestamp(self, record: logging.LogRecord):
-        time_str = time.strftime(self.datefmt, time.localtime(record.created))
-        return self.msecfmt % (time_str, record.msecs)
-
-
 class ExtraRichFormatter(logging.Formatter):
     """
     This formatter takes care of printing the dictionary passed as 'extra' to
     the logging calls.
     """
-
-    # Obtained from Python's documentation and python-json-logger
-    # https://docs.python.org/3/library/logging.html#logrecord-attributes
-    # https://github.com/nhairs/python-json-logger/blob/main/src/pythonjsonlogger/core.py
-    RESERVED_ATTRS: List[str] = [
-        "args",
-        "asctime",
-        "created",
-        "exc_info",
-        "exc_text",
-        "filename",
-        "funcName",
-        "levelname",
-        "levelno",
-        "lineno",
-        "module",
-        "msecs",
-        "message",
-        "msg",
-        "name",
-        "pathname",
-        "process",
-        "processName",
-        "relativeCreated",
-        "stack_info",
-        "thread",
-        "threadName",
-        "taskName",
-    ]
 
     def __init__(self, fmt=None, datefmt=None):
         super().__init__(fmt, datefmt)
@@ -95,7 +49,7 @@ class ExtraRichFormatter(logging.Formatter):
         extra_dict = {}
         for key, value in record.__dict__.items():
             if (
-                key not in ExtraRichFormatter.RESERVED_ATTRS
+                key not in RESERVED_ATTRS
                 and not key.startswith("_")
             ):
                 extra_dict[key] = value
@@ -160,11 +114,13 @@ def get_default_prod_handler() -> logging.Handler:
         # the order of the format string doesn't matter
         # it just needs to include the fields that you want in the output
         # this is just for the default LogRecord attributes
-        # for custom ones like "timestamp" check the RequestFilter class
+        # for custom ones like "trace_id" check the RequestFilter class
         fmt="%(levelname)s:%(message)s",
+        rename_fields={"levelname":"level"},
+        timestamp=True,
     )
     log_handler.setFormatter(formatter)
-    log_handler.addFilter(ProdRequestFilter())
+    log_handler.addFilter(RequestFilter())
     return log_handler
 
 

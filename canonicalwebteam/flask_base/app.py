@@ -27,7 +27,7 @@ from canonicalwebteam.flask_base.middlewares.dev_log import DevLogWSGI
 from canonicalwebteam.flask_base.middlewares.proxy_fix import ProxyFix
 from canonicalwebteam.flask_base.observability import (
     register_metrics,
-    register_trace,
+    register_traces,
 )
 from canonicalwebteam.yaml_responses.flask_helpers import (
     prepare_deleted,
@@ -233,12 +233,14 @@ class FlaskBase(flask.Flask):
         favicon_url=None,
         template_404=None,
         template_500=None,
+        handler=None,
+        untraced_routes=["/_status"],
         *args,
         **kwargs,
     ):
         super().__init__(name, *args, **kwargs)
 
-        self.configure_logging(kwargs.get("handler"))
+        self.configure_logging(handler)
 
         self.service = service
 
@@ -360,4 +362,4 @@ class FlaskBase(flask.Flask):
 
         set_compression_types(self)
         register_metrics(self)
-        register_trace(self)
+        register_traces(self, untraced_routes)
