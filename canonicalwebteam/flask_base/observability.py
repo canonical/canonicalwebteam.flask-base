@@ -4,6 +4,9 @@ from typing import List, TYPE_CHECKING
 
 from flask import Flask, g, request
 
+from canonicalwebteam.flask_base.metrics import RequestsMetrics
+
+
 # If environment variable OTEL_SERVICE_NAME is available then we import
 # Anyway the monkey patching done by opentelemetry should be done much before
 # Ideally in the post_fork() method from gunicorn:
@@ -11,13 +14,11 @@ from flask import Flask, g, request
 TRACING_ENABLED = environ.get("OTEL_SERVICE_NAME", False)
 
 if TRACING_ENABLED or TYPE_CHECKING:
-    from opentelemetry import propagate, trace
+    from opentelemetry import propagate
     from opentelemetry.context import attach, detach
     from opentelemetry.instrumentation.requests import RequestsInstrumentor
     from opentelemetry.instrumentation.flask import FlaskInstrumentor
     from opentelemetry.trace import get_current_span, Span
-
-from canonicalwebteam.flask_base.metrics import RequestsMetrics
 
 
 def register_metrics(app: Flask):
@@ -82,18 +83,20 @@ def register_traces(app: Flask, untraced_routes: List[str]):
         return
 
     # OpenTelemetry tracing
-    tracer = trace.get_tracer(app.name)
 
     def request_hook(span: Span, environ):
         if span and span.is_recording():
-            span.update_name(f"{environ['REQUEST_METHOD']} {environ['PATH_INFO']}")
+            span.update_name(
+                f"{environ['REQUEST_METHOD']} {environ['PATH_INFO']}"
+            )
 
     # Add tracing auto instrumentation
     FlaskInstrumentor().instrument_app(
-        app, excluded_urls=",".join(untraced_routes), request_hook=request_hook
+        app,
+        excluded_urls=",".join(untraced_routes),
+        request_hook=request_hook,
     )
     RequestsInstrumentor().instrument()
-
 
     @app.before_request
     def extract_trace_context():

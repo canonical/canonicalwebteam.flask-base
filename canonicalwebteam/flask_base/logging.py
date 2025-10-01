@@ -49,10 +49,7 @@ class ExtraRichFormatter(logging.Formatter):
     def _get_extra_dict(self, record: logging.LogRecord) -> dict:
         extra_dict = {}
         for key, value in record.__dict__.items():
-            if (
-                key not in RESERVED_ATTRS
-                and not key.startswith("_")
-            ):
+            if key not in RESERVED_ATTRS and not key.startswith("_"):
                 extra_dict[key] = value
 
         return extra_dict
@@ -117,7 +114,7 @@ def get_default_prod_handler() -> logging.Handler:
         # this is just for the default LogRecord attributes
         # for custom ones like "trace_id" check the RequestFilter class
         fmt="%(levelname)s:%(message)s",
-        rename_fields={"levelname":"level"},
+        rename_fields={"levelname": "level"},
         timestamp=True,
     )
     log_handler.setFormatter(formatter)

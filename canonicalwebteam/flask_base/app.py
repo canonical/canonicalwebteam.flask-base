@@ -327,7 +327,7 @@ class FlaskBase(flask.Flask):
         if os.path.isfile(favicon_path):
 
             @self.route("/favicon.ico")
-            def favicon(): # type: ignore
+            def favicon():  # type: ignore
                 return flask.send_file(
                     favicon_path, mimetype="image/vnd.microsoft.icon"
                 )
