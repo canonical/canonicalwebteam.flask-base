@@ -5,6 +5,7 @@ from functools import lru_cache
 
 from flask import Flask
 from rich.logging import RichHandler
+from rich.text import Text
 from pythonjsonlogger.json import JsonFormatter
 from pythonjsonlogger.core import RESERVED_ATTRS
 from gunicorn.glogging import Logger as GunicornLogger
@@ -16,8 +17,8 @@ from canonicalwebteam.flask_base.observability import get_trace_id
 DEFAULT_DEV_FORMAT = "[%(name)s] %(message)s"
 
 
-def _date_format_with_ms(dt: datetime.datetime) -> str:
-    return dt.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+def _date_format_with_ms(dt: datetime.datetime) -> Text:
+    return Text(dt.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3])
 
 
 class RequestFilter(logging.Filter):

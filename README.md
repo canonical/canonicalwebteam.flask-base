@@ -82,6 +82,16 @@ available.
 Observability is enabled by default when setting up the appropriate relations for an application
 that uses [paas-charm](https://github.com/canonical/paas-charm/blob/main/src/paas_charm/templates/gunicorn.conf.py.j2).
 
+#### Configuring tracing
+
+There is a parameter that has been added to FlaskBase constructor in order to exclude certain routes from
+being traced.
+```python
+app = FlaskBase(..., untraced_routes=["/demo"])
+```
+
+By default, just the "/_status" route is ignored.
+
 ### Per route metrics
 
 If a statsd-client is configured (which is enabled by default with 12f apps), FlaskBase will automatically add per route metrics. Including error counts, request counts, and response times.
