@@ -1,3 +1,4 @@
+import sys
 import time
 from os import environ
 from typing import List, TYPE_CHECKING
@@ -13,7 +14,9 @@ from canonicalwebteam.flask_base.metrics import RequestsMetrics
 # https://github.com/canonical/paas-charm/blob/main/src/paas_charm/templates/gunicorn.conf.py.j2#L17
 TRACING_ENABLED = environ.get("OTEL_SERVICE_NAME", False)
 
-if TRACING_ENABLED or TYPE_CHECKING:
+# We do the imports only when tracing is enabled, for the editor's type
+# checking or when we are running the unit tests
+if TRACING_ENABLED or TYPE_CHECKING or 'unittest' in sys.modules.keys():
     from opentelemetry import propagate
     from opentelemetry.context import attach, detach
     from opentelemetry.instrumentation.requests import RequestsInstrumentor
@@ -120,3 +123,10 @@ def register_traces(app: Flask, untraced_routes: List[str]):
         token = getattr(g, "_otel_token", None)
         if token is not None:
             detach(token)
+
+    return (
+        request_hook,
+        extract_trace_context,
+        add_trace_id_header,
+        detach_trace_context,
+    )
