@@ -6,6 +6,7 @@ from typing import List, TYPE_CHECKING
 from flask import Flask, g, request
 
 from canonicalwebteam.flask_base.metrics import RequestsMetrics
+import traceback
 
 
 # If environment variable OTEL_SERVICE_NAME is available then we import
@@ -81,28 +82,14 @@ def get_trace_id():
     return None
 
 
-def register_traces(app: Flask, untraced_routes: List[str]):
-    if not TRACING_ENABLED:
-        return
-
-    # OpenTelemetry tracing
-
-    def request_hook(span: Span, environ):
+def request_hook(span: Span, environ):
         if span and span.is_recording():
             span.update_name(
                 f"{environ['REQUEST_METHOD']} {environ['PATH_INFO']}"
             )
 
-    # Add tracing auto instrumentation
-    FlaskInstrumentor().instrument_app(
-        app,
-        excluded_urls=",".join(untraced_routes),
-        request_hook=request_hook,
-    )
-    RequestsInstrumentor().instrument()
 
-    @app.before_request
-    def extract_trace_context():
+def extract_trace_context():
         """Extract trace context from traceparent header if present"""
         traceparent = request.headers.get("traceparent")
         if traceparent:
@@ -110,23 +97,33 @@ def register_traces(app: Flask, untraced_routes: List[str]):
             context = propagate.extract(carrier)
             g._otel_token = attach(context)
 
-    @app.after_request
-    def add_trace_id_header(response):
+
+def add_trace_id_header(response):
         trace_id = get_trace_id()
         if trace_id:
             response.headers["X-Request-ID"] = trace_id
         return response
 
-    @app.teardown_request
-    def detach_trace_context(exception=None):
+
+def detach_trace_context(exception=None):
         """Detach the trace context at the end of the request"""
         token = getattr(g, "_otel_token", None)
         if token is not None:
             detach(token)
 
-    return (
-        request_hook,
-        extract_trace_context,
-        add_trace_id_header,
-        detach_trace_context,
+
+def register_traces(app: Flask, untraced_routes: List[str]):
+    if not TRACING_ENABLED:
+        return
+
+    # OpenTelemetry tracing auto instrumentation
+    FlaskInstrumentor().instrument_app(
+        app,
+        excluded_urls=",".join(untraced_routes),
+        request_hook=request_hook,
     )
+    RequestsInstrumentor().instrument()
+
+    app.before_request(extract_trace_context)
+    app.after_request(add_trace_id_header)
+    app.teardown_request(detach_trace_context)

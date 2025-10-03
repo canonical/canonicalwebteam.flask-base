@@ -2,17 +2,20 @@ import time
 import unittest
 
 from unittest.mock import patch, MagicMock
-from flask import g, request
-
-import opentelemetry as otel
-import opentelemetry.context as otel_context
-import opentelemetry.instrumentation.requests as otel_requests
-import opentelemetry.instrumentation.flask as otel_flask
-import opentelemetry.trace as otel_trace
+from flask import g, request, Response
 
 import canonicalwebteam.flask_base.observability as observability
 
 from tests.test_app.webapp.app import create_test_app
+
+
+def _get_request_functions_names(functions):
+    # "None" gets the application scoped functions
+    # the blueprint functions are the ones that are named
+    return [
+        function.__name__
+        for function in functions.get(None, [])
+    ]
 
 
 class TestMetrics(unittest.TestCase):
@@ -20,20 +23,15 @@ class TestMetrics(unittest.TestCase):
         self.app = create_test_app()
 
     def test_register_metrics(self) -> None:
-        # "None" gets the application scoped functions
-        # the blueprint functions are the ones that are named
-        before_request_functions = [
-            function.__name__
-            for function in self.app.before_request_funcs.get(None, [])
-        ]
-        after_request_functions = [
-            function.__name__
-            for function in self.app.after_request_funcs.get(None, [])
-        ]
-        teardown_request_functions = [
-            function.__name__
-            for function in self.app.teardown_request_funcs.get(None, [])
-        ]
+        before_request_functions = _get_request_functions_names(
+            self.app.before_request_funcs
+        )
+        after_request_functions = _get_request_functions_names(
+            self.app.after_request_funcs
+        )
+        teardown_request_functions = _get_request_functions_names(
+            self.app.teardown_request_funcs
+        )
         self.assertIn("start_timer", before_request_functions)
         self.assertIn("record_metrics", after_request_functions)
         self.assertIn("handle_teardown", teardown_request_functions)
@@ -94,109 +92,151 @@ class TestMetrics(unittest.TestCase):
 
 
 class TestTraces(unittest.TestCase):
+    trace_id = "eef33c8eba4cfbacb6788f8f8189d51a"
+
     def setUp(self) -> None:
+        self.mock_token = MagicMock()
+        self.mock_span = MagicMock()
         self.propagate_patch = patch.object(
-            otel,
+            observability,
             "propagate",
-            _mock_propagate(),
         )
-        self.propagate_patch.start()
+        self.mock_propagate = self.propagate_patch.start()
         self.detach_patch = patch.object(
-            otel_context,
+            observability,
             "detach",
-            _mock_detach(),
         )
-        self.detach_patch.start()
+        self.mock_detach = self.detach_patch.start()
         self.attach_patch = patch.object(
-            otel_context,
+            observability,
             "attach",
-            lambda: _mock_token(),
         )
-        self.attach_patch.start()
+        self.mock_attach = self.attach_patch.start()
         self.req_inst_patch = patch.object(
-            otel_requests,
+            observability,
             "RequestsInstrumentor",
-            _mock_req_inst(),
         )
-        self.req_inst_patch.start()
+        self.mock_request_instrumentor = self.req_inst_patch.start()
         self.flask_inst_patch = patch.object(
-            otel_flask,
+            observability,
             "FlaskInstrumentor",
-            _mock_flask_inst(),
         )
-        self.flask_inst_patch.start()
+        self.mock_flask_instrumentor = self.flask_inst_patch.start()
         self.cur_span_patch = patch.object(
-            otel_trace,
+            observability,
             "get_current_span",
-            lambda: _mock_span(),
         )
-        self.cur_span_patch.start()
+        self.mock_get_current_span = self.cur_span_patch.start()
         self.tracing_patch = patch.object(
             observability,
             "TRACING_ENABLED",
             True,
         )
-        self.tracing_patch.start()
+        self.mock_tracing = self.tracing_patch.start()
     
         # Once everything is patched, start the app
         self.app = create_test_app()
 
     def tearDown(self) -> None:
-        self.tracing_patch.stop()
-        self.propagate_patch.stop()
-        self.attach_patch.stop()
-        self.detach_patch.stop()
-        self.req_inst_patch.stop()
-        self.flask_inst_patch.stop()
-        self.cur_span_patch.stop()
+        for patcher in (
+            self.flask_inst_patch,
+            self.req_inst_patch,
+            self.propagate_patch,
+            self.attach_patch,
+            self.detach_patch,
+            self.cur_span_patch,
+            self.tracing_patch,
+        ):
+            patcher.stop()
+        
+        for mock in (
+            self.mock_token,
+            self.mock_span,
+            self.mock_propagate,
+            self.mock_attach,
+            self.mock_detach,
+            self.mock_flask_instrumentor,
+            self.mock_request_instrumentor,
+            self.mock_get_current_span,
+        ):
+            mock.reset_mock()
+
+    def _mock_get_trace_id(self, id: str) -> None:
+        mock_span_context = MagicMock()
+        mock_span_context.trace_id = int(id, 16)
+
+        self.mock_span.get_span_context.return_value = mock_span_context
+        self.mock_get_current_span.return_value = self.mock_span
 
     def test_get_trace_id(self) -> None:
-        expected_trace_id = "eef33c8eba4cfbacb6788f8f8189d51a"
-        with patch("opentelemetry.trace.get_current_span") as mock_get_span:
-            mock_span_context = MagicMock()
-            mock_span_context.trace_id = int(expected_trace_id, 16)
-            mock_span = MagicMock()
-            mock_span.get_span_context.return_value = mock_span_context
-            mock_get_span.return_value = mock_span
+        self._mock_get_trace_id(TestTraces.trace_id)
 
-            trace_id = observability.get_trace_id()
-            self.assertEqual(trace_id, expected_trace_id)
+        trace_id = observability.get_trace_id()
+        self.assertEqual(trace_id, TestTraces.trace_id)
 
     def test_register_traces(self) -> None:
-        pass
+        self.mock_flask_instrumentor.assert_called_once()
+        self.mock_request_instrumentor.assert_called_once()
+
+        before_request_functions = _get_request_functions_names(
+            self.app.before_request_funcs
+        )
+        after_request_functions = _get_request_functions_names(
+            self.app.after_request_funcs
+        )
+        teardown_request_functions = _get_request_functions_names(
+            self.app.teardown_request_funcs
+        )
+
+        self.assertIn("extract_trace_context", before_request_functions)
+        self.assertIn("add_trace_id_header", after_request_functions)
+        self.assertIn("detach_trace_context", teardown_request_functions)
 
     def test_request_hook(self) -> None:
-        pass
+        mock_flask_instrumentor_instance = self.mock_flask_instrumentor.return_value
+        mock_flask_instrumentor_instance.instrument_app.assert_called_with(
+            self.app,
+            excluded_urls="/_status",
+            request_hook=observability.request_hook,
+        )
+        mock_requests_instrumentor_instance = self.mock_request_instrumentor.return_value
+        mock_requests_instrumentor_instance.instrument.assert_called_with()
+
+        self.mock_span.is_recording.return_value = True
+        environ = {
+            "REQUEST_METHOD": "GET",
+            "PATH_INFO": "/test",
+        }
+        observability.request_hook(self.mock_span, environ)
+        self.mock_span.update_name.assert_called_once_with("GET /test")
 
     def test_extract_trace_context(self) -> None:
-        pass
+        with self.app.test_request_context("/", headers={"traceparent": "long_hex_string"}):
+            context_mock = MagicMock()
+            self.mock_propagate.extract.return_value = context_mock
+            self.mock_attach.return_value = self.mock_token
+
+            observability.extract_trace_context()
+
+            self.mock_propagate.extract.assert_called_once_with({"traceparent": "long_hex_string"})
+            self.mock_attach.assert_called_once_with(context_mock)
+            self.assertIs(g._otel_token, self.mock_token)
 
     def test_add_trace_id_header(self) -> None:
-        pass
+        response = Response(status=200, headers={})
+        self._mock_get_trace_id(TestTraces.trace_id)
+
+        observability.add_trace_id_header(response)
+
+        self.assertEqual(response.headers.get("X-Request-ID"), TestTraces.trace_id)
 
     def test_detach_trace_context(self) -> None:
-        pass
+        with self.app.app_context():
+            g._otel_token = self.mock_token
 
+            observability.detach_trace_context()
 
-# Functions to generate mocks for opentelemetry
-
-def _mock_propagate() -> MagicMock:
-    return MagicMock()
-    
-def _mock_detach() -> MagicMock:
-    return MagicMock()
-
-def _mock_token() -> MagicMock:
-    return MagicMock()
-
-def _mock_req_inst() -> MagicMock:
-    return MagicMock()
-
-def _mock_flask_inst() -> MagicMock:
-    return MagicMock()
-
-def _mock_span() -> MagicMock:
-    return MagicMock()
+            self.mock_detach.assert_called_once_with(self.mock_token)
 
 
 class TestNoTracing(unittest.TestCase):
@@ -208,20 +248,15 @@ class TestNoTracing(unittest.TestCase):
         mock_flask_instrument,
     ) -> None:
         app = create_test_app()
-        # "None" gets the application scoped functions
-        # the blueprint functions are the ones that are named
-        before_request_functions = [
-            function.__name__
-            for function in app.before_request_funcs.get(None, [])
-        ]
-        after_request_functions = [
-            function.__name__
-            for function in app.after_request_funcs.get(None, [])
-        ]
-        teardown_request_functions = [
-            function.__name__
-            for function in app.teardown_request_funcs.get(None, [])
-        ]
+        before_request_functions = _get_request_functions_names(
+            app.before_request_funcs
+        )
+        after_request_functions = _get_request_functions_names(
+            app.after_request_funcs
+        )
+        teardown_request_functions = _get_request_functions_names(
+            app.teardown_request_funcs
+        )
 
         self.assertNotIn("extract_trace_context", before_request_functions)
         self.assertNotIn("add_trace_id_header", after_request_functions)
