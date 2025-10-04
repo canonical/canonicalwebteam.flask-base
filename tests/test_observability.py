@@ -12,10 +12,7 @@ from tests.test_app.webapp.app import create_test_app
 def _get_request_functions_names(functions):
     # "None" gets the application scoped functions
     # the blueprint functions are the ones that are named
-    return [
-        function.__name__
-        for function in functions.get(None, [])
-    ]
+    return [function.__name__ for function in functions.get(None, [])]
 
 
 class TestMetrics(unittest.TestCase):
@@ -133,7 +130,7 @@ class TestTraces(unittest.TestCase):
             True,
         )
         self.mock_tracing = self.tracing_patch.start()
-    
+
         # Once everything is patched, start the app
         self.app = create_test_app()
 
@@ -148,7 +145,7 @@ class TestTraces(unittest.TestCase):
             self.tracing_patch,
         ):
             patcher.stop()
-        
+
         for mock in (
             self.mock_token,
             self.mock_span,
@@ -193,13 +190,17 @@ class TestTraces(unittest.TestCase):
         self.assertIn("detach_trace_context", teardown_request_functions)
 
     def test_request_hook(self) -> None:
-        mock_flask_instrumentor_instance = self.mock_flask_instrumentor.return_value
+        mock_flask_instrumentor_instance = (
+            self.mock_flask_instrumentor.return_value
+        )
         mock_flask_instrumentor_instance.instrument_app.assert_called_with(
             self.app,
             excluded_urls="/_status",
             request_hook=observability.request_hook,
         )
-        mock_requests_instrumentor_instance = self.mock_request_instrumentor.return_value
+        mock_requests_instrumentor_instance = (
+            self.mock_request_instrumentor.return_value
+        )
         mock_requests_instrumentor_instance.instrument.assert_called_with()
 
         self.mock_span.is_recording.return_value = True
@@ -211,14 +212,18 @@ class TestTraces(unittest.TestCase):
         self.mock_span.update_name.assert_called_once_with("GET /test")
 
     def test_extract_trace_context(self) -> None:
-        with self.app.test_request_context("/", headers={"traceparent": "long_hex_string"}):
+        with self.app.test_request_context(
+            "/", headers={"traceparent": "long_hex_string"}
+        ):
             context_mock = MagicMock()
             self.mock_propagate.extract.return_value = context_mock
             self.mock_attach.return_value = self.mock_token
 
             observability.extract_trace_context()
 
-            self.mock_propagate.extract.assert_called_once_with({"traceparent": "long_hex_string"})
+            self.mock_propagate.extract.assert_called_once_with(
+                {"traceparent": "long_hex_string"}
+            )
             self.mock_attach.assert_called_once_with(context_mock)
             self.assertIs(g._otel_token, self.mock_token)
 
@@ -228,7 +233,9 @@ class TestTraces(unittest.TestCase):
 
         observability.add_trace_id_header(response)
 
-        self.assertEqual(response.headers.get("X-Request-ID"), TestTraces.trace_id)
+        self.assertEqual(
+            response.headers.get("X-Request-ID"), TestTraces.trace_id
+        )
 
     def test_detach_trace_context(self) -> None:
         with self.app.app_context():
