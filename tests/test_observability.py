@@ -71,6 +71,9 @@ class TestMetrics(unittest.TestCase):
     @patch("canonicalwebteam.flask_base.metrics.RequestsMetrics.errors")
     def test_handle_teardown(self, mock_errors) -> None:
         with self.app.test_client() as client:
+            # avoid printing the exception in the log
+            self.app.logger.setLevel("CRITICAL")
+
             client.get("/exception")
             mock_errors.inc.assert_called_once()
             expected_labels = {

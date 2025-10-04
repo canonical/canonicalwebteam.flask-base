@@ -18,7 +18,7 @@ from canonicalwebteam.flask_base.env import (
     get_flask_env,
     load_plain_env_variables,
 )
-from canonicalwebteam.flask_base.logging import (
+from canonicalwebteam.flask_base.log_utils import (
     setup_root_logger,
     get_default_prod_handler,
     is_debug_environment,

@@ -13,7 +13,7 @@ from werkzeug.debug import DebuggedApplication
 from canonicalwebteam.flask_base.app import FlaskBase
 from canonicalwebteam.flask_base.middlewares.proxy_fix import ProxyFix
 from canonicalwebteam.flask_base.middlewares.dev_log import DevLogWSGI
-from canonicalwebteam.flask_base.logging import get_default_prod_handler
+from canonicalwebteam.flask_base.log_utils import get_default_prod_handler
 from tests.test_app.webapp.app import create_test_app
 
 

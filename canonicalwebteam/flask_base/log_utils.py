@@ -122,7 +122,6 @@ def get_default_prod_handler() -> logging.Handler:
     return log_handler
 
 
-@lru_cache(maxsize=1)
 def is_debug_environment():
     debug_value = get_flask_env("DEBUG")
     return debug_value is not None and debug_value.lower() == "true"
