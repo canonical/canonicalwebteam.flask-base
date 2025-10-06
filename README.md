@@ -56,7 +56,7 @@ logger.error("This is a test log with extra arguments", extra={
 The Gunicorn loggers are set up in a way that they don't use the root logger. If you want to get the same type 
 of logs than the rest you need to execute your application passing the 'logger-class' attribute:
 ```bash
-gunicorn webapp.app:app --logger-class canonicalwebteam.flask_base.logging.GunicornDevLogger ...
+gunicorn webapp.app:app --logger-class canonicalwebteam.flask_base.log_utils.GunicornDevLogger ...
 ```
 
 #### Configuring logging

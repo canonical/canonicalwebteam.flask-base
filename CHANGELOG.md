@@ -14,7 +14,7 @@ Be aware that you can now pass parameters to the logging method with the "extra"
 will appear in the structured JSON log.
 
 For the development prettified logs there is one step to be done.
-Update your gunicorn entrypoint to add `--logger-class canonicalwebteam.flask_base.logging.GunicornDevLogger`
+Update your gunicorn entrypoint to add `--logger-class canonicalwebteam.flask_base.log_utils.GunicornDevLogger`
 if you are in DEBUG mode.
 
 One can pass a custom logging.Handler to FlaskBase in order to personalize the output of the logs.
