@@ -1,11 +1,8 @@
 import sys
-import time
 from os import environ
 from typing import List, TYPE_CHECKING
 
 from flask import Flask, g, request
-
-from canonicalwebteam.flask_base.metrics import RequestsMetrics
 
 
 # If environment variable OTEL_SERVICE_NAME is available then we import
@@ -22,47 +19,6 @@ if TRACING_ENABLED or TYPE_CHECKING or "unittest" in sys.modules.keys():
     from opentelemetry.instrumentation.requests import RequestsInstrumentor
     from opentelemetry.instrumentation.flask import FlaskInstrumentor
     from opentelemetry.trace import get_current_span, Span
-
-
-def register_metrics(app: Flask):
-    """
-    Register per route metrics for the Flask application.
-    This will track the number of requests, their latency, and errors.
-    """
-
-    @app.before_request
-    def start_timer():
-        g.start_time = time.time()
-
-    @app.after_request
-    def record_metrics(response):
-        duration_ms = (time.time() - g.get("start_time", time.time())) * 1000
-
-        labels = {
-            "view": request.endpoint or "unknown",
-            "method": request.method,
-            "status": str(response.status_code),
-        }
-
-        RequestsMetrics.requests.inc(1, **labels)
-        RequestsMetrics.latency.observe(duration_ms, **labels)
-
-        return response
-
-    @app.teardown_request
-    def handle_teardown(exception):
-        if exception:
-            # log 5xx errors
-            status_code = getattr(exception, "code", 500)
-
-            labels = {
-                "view": request.endpoint or "unknown",
-                "method": request.method,
-                "status": str(status_code),
-            }
-
-            if status_code >= 500:
-                RequestsMetrics.errors.inc(1, **labels)
 
 
 # Traces will only work if properly set up

@@ -11,7 +11,7 @@ from pythonjsonlogger.core import RESERVED_ATTRS
 from gunicorn.glogging import Logger as GunicornLogger
 
 from canonicalwebteam.flask_base.env import get_flask_env
-from canonicalwebteam.flask_base.observability import get_trace_id
+from canonicalwebteam.flask_base.opentelemetry.tracing import get_trace_id
 
 
 DEFAULT_DEV_FORMAT = "[%(name)s] %(message)s"

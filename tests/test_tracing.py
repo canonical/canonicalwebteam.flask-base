@@ -1,94 +1,12 @@
-import time
 import unittest
 
 from unittest.mock import patch, MagicMock
-from flask import g, request, Response
+from flask import g, Response
 
-import canonicalwebteam.flask_base.observability as observability
+import canonicalwebteam.flask_base.opentelemetry.tracing as tracing
 
 from tests.test_app.webapp.app import create_test_app
-
-
-def _get_request_functions_names(functions):
-    # "None" gets the application scoped functions
-    # the blueprint functions are the ones that are named
-    return [function.__name__ for function in functions.get(None, [])]
-
-
-class TestMetrics(unittest.TestCase):
-    def setUp(self) -> None:
-        self.app = create_test_app()
-
-    def test_register_metrics(self) -> None:
-        before_request_functions = _get_request_functions_names(
-            self.app.before_request_funcs
-        )
-        after_request_functions = _get_request_functions_names(
-            self.app.after_request_funcs
-        )
-        teardown_request_functions = _get_request_functions_names(
-            self.app.teardown_request_funcs
-        )
-        self.assertIn("start_timer", before_request_functions)
-        self.assertIn("record_metrics", after_request_functions)
-        self.assertIn("handle_teardown", teardown_request_functions)
-
-    def test_start_timer(self) -> None:
-        with self.app.test_client() as client:
-            client.get("/page")
-            time.sleep(0.1)
-            self.assertGreater(time.time(), g.start_time)
-
-    @patch("canonicalwebteam.flask_base.metrics.RequestsMetrics.requests")
-    @patch("canonicalwebteam.flask_base.metrics.RequestsMetrics.latency")
-    def test_record_metrics(self, mock_latency, mock_requests) -> None:
-        with self.app.test_client() as client:
-            response = client.get("/page")
-            mock_requests.inc.assert_called_once()
-            mock_latency.observe.assert_called_once()
-            expected_labels = {
-                "view": request.endpoint or "unknown",
-                "method": request.method,
-                "status": str(response.status_code),
-            }
-            self.assertEqual(
-                mock_requests.inc.call_args.args,
-                (1,),
-            )
-            self.assertEqual(
-                mock_requests.inc.call_args.kwargs,
-                expected_labels,
-            )
-            self.assertGreater(
-                mock_latency.observe.call_args.args[0],
-                0,
-            )
-            self.assertEqual(
-                mock_latency.observe.call_args.kwargs,
-                expected_labels,
-            )
-
-    @patch("canonicalwebteam.flask_base.metrics.RequestsMetrics.errors")
-    def test_handle_teardown(self, mock_errors) -> None:
-        with self.app.test_client() as client:
-            # avoid printing the exception in the log
-            self.app.logger.setLevel("CRITICAL")
-
-            client.get("/exception")
-            mock_errors.inc.assert_called_once()
-            expected_labels = {
-                "view": request.endpoint or "unknown",
-                "method": request.method,
-                "status": "500",
-            }
-            self.assertEqual(
-                mock_errors.inc.call_args.args,
-                (1,),
-            )
-            self.assertEqual(
-                mock_errors.inc.call_args.kwargs,
-                expected_labels,
-            )
+from tests.test_helpers import get_request_functions_names
 
 
 class TestTraces(unittest.TestCase):
@@ -98,37 +16,37 @@ class TestTraces(unittest.TestCase):
         self.mock_token = MagicMock()
         self.mock_span = MagicMock()
         self.propagate_patch = patch.object(
-            observability,
+            tracing,
             "propagate",
         )
         self.mock_propagate = self.propagate_patch.start()
         self.detach_patch = patch.object(
-            observability,
+            tracing,
             "detach",
         )
         self.mock_detach = self.detach_patch.start()
         self.attach_patch = patch.object(
-            observability,
+            tracing,
             "attach",
         )
         self.mock_attach = self.attach_patch.start()
         self.req_inst_patch = patch.object(
-            observability,
+            tracing,
             "RequestsInstrumentor",
         )
         self.mock_request_instrumentor = self.req_inst_patch.start()
         self.flask_inst_patch = patch.object(
-            observability,
+            tracing,
             "FlaskInstrumentor",
         )
         self.mock_flask_instrumentor = self.flask_inst_patch.start()
         self.cur_span_patch = patch.object(
-            observability,
+            tracing,
             "get_current_span",
         )
         self.mock_get_current_span = self.cur_span_patch.start()
         self.tracing_patch = patch.object(
-            observability,
+            tracing,
             "TRACING_ENABLED",
             True,
         )
@@ -171,20 +89,20 @@ class TestTraces(unittest.TestCase):
     def test_get_trace_id(self) -> None:
         self._mock_get_trace_id(TestTraces.trace_id)
 
-        trace_id = observability.get_trace_id()
+        trace_id = tracing.get_trace_id()
         self.assertEqual(trace_id, TestTraces.trace_id)
 
     def test_register_traces(self) -> None:
         self.mock_flask_instrumentor.assert_called_once()
         self.mock_request_instrumentor.assert_called_once()
 
-        before_request_functions = _get_request_functions_names(
+        before_request_functions = get_request_functions_names(
             self.app.before_request_funcs
         )
-        after_request_functions = _get_request_functions_names(
+        after_request_functions = get_request_functions_names(
             self.app.after_request_funcs
         )
-        teardown_request_functions = _get_request_functions_names(
+        teardown_request_functions = get_request_functions_names(
             self.app.teardown_request_funcs
         )
 
@@ -199,7 +117,7 @@ class TestTraces(unittest.TestCase):
         mock_flask_instrumentor_instance.instrument_app.assert_called_with(
             self.app,
             excluded_urls="/_status",
-            request_hook=observability.request_hook,
+            request_hook=tracing.request_hook,
         )
         mock_requests_instrumentor_instance = (
             self.mock_request_instrumentor.return_value
@@ -211,7 +129,7 @@ class TestTraces(unittest.TestCase):
             "REQUEST_METHOD": "GET",
             "PATH_INFO": "/test",
         }
-        observability.request_hook(self.mock_span, environ)
+        tracing.request_hook(self.mock_span, environ)
         self.mock_span.update_name.assert_called_once_with("GET /test")
 
     def test_extract_trace_context(self) -> None:
@@ -222,7 +140,7 @@ class TestTraces(unittest.TestCase):
             self.mock_propagate.extract.return_value = context_mock
             self.mock_attach.return_value = self.mock_token
 
-            observability.extract_trace_context()
+            tracing.extract_trace_context()
 
             self.mock_propagate.extract.assert_called_once_with(
                 {"traceparent": "long_hex_string"}
@@ -234,7 +152,7 @@ class TestTraces(unittest.TestCase):
         response = Response(status=200, headers={})
         self._mock_get_trace_id(TestTraces.trace_id)
 
-        observability.add_trace_id_header(response)
+        tracing.add_trace_id_header(response)
 
         self.assertEqual(
             response.headers.get("X-Request-ID"), TestTraces.trace_id
@@ -244,7 +162,7 @@ class TestTraces(unittest.TestCase):
         with self.app.app_context():
             g._otel_token = self.mock_token
 
-            observability.detach_trace_context()
+            tracing.detach_trace_context()
 
             self.mock_detach.assert_called_once_with(self.mock_token)
 
@@ -258,13 +176,13 @@ class TestNoTracing(unittest.TestCase):
         mock_flask_instrument,
     ) -> None:
         app = create_test_app()
-        before_request_functions = _get_request_functions_names(
+        before_request_functions = get_request_functions_names(
             app.before_request_funcs
         )
-        after_request_functions = _get_request_functions_names(
+        after_request_functions = get_request_functions_names(
             app.after_request_funcs
         )
-        teardown_request_functions = _get_request_functions_names(
+        teardown_request_functions = get_request_functions_names(
             app.teardown_request_funcs
         )
 

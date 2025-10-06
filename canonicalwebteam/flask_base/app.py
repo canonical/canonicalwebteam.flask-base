@@ -25,10 +25,8 @@ from canonicalwebteam.flask_base.log_utils import (
 )
 from canonicalwebteam.flask_base.middlewares.dev_log import DevLogWSGI
 from canonicalwebteam.flask_base.middlewares.proxy_fix import ProxyFix
-from canonicalwebteam.flask_base.observability import (
-    register_metrics,
-    register_traces,
-)
+from canonicalwebteam.flask_base.opentelemetry.tracing import register_traces
+from canonicalwebteam.flask_base.opentelemetry.metrics import register_metrics
 from canonicalwebteam.yaml_responses.flask_helpers import (
     prepare_deleted,
     prepare_redirects,
