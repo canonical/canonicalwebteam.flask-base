@@ -32,8 +32,18 @@ class TestMetrics(unittest.TestCase):
             time.sleep(0.1)
             self.assertGreater(time.time(), g.start_time)
 
-    @patch("canonicalwebteam.flask_base.opentelemetry.metrics.RequestsMetrics.requests")
-    @patch("canonicalwebteam.flask_base.opentelemetry.metrics.RequestsMetrics.latency")
+    @patch(
+        (
+            "canonicalwebteam.flask_base.opentelemetry."
+            "metrics.RequestsMetrics.requests"
+        )
+    )
+    @patch(
+        (
+            "canonicalwebteam.flask_base.opentelemetry."
+            "metrics.RequestsMetrics.latency"
+        )
+    )
     def test_record_metrics(self, mock_latency, mock_requests) -> None:
         with self.app.test_client() as client:
             response = client.get("/page")
@@ -61,7 +71,12 @@ class TestMetrics(unittest.TestCase):
                 expected_labels,
             )
 
-    @patch("canonicalwebteam.flask_base.opentelemetry.metrics.RequestsMetrics.errors")
+    @patch(
+        (
+            "canonicalwebteam.flask_base.opentelemetry."
+            "metrics.RequestsMetrics.errors"
+        )
+    )
     def test_handle_teardown(self, mock_errors) -> None:
         with self.app.test_client() as client:
             # avoid printing the exception in the log

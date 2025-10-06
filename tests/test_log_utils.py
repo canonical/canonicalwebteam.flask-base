@@ -90,7 +90,8 @@ class TestLogging(unittest.TestCase):
         )
         rich_handler_instance.addFilter.assert_called_once()
         self.assertIsInstance(
-            rich_handler_instance.addFilter.call_args.args[0], RequestTraceIdFilter
+            rich_handler_instance.addFilter.call_args.args[0],
+            RequestTraceIdFilter,
         )
 
     def test_default_prod_handler(self) -> None:
