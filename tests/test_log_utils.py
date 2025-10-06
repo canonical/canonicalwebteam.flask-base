@@ -6,7 +6,7 @@ from pythonjsonlogger.json import JsonFormatter
 
 from canonicalwebteam.flask_base.log_utils import (
     ExtraRichFormatter,
-    RequestFilter,
+    RequestTraceIdFilter,
     GunicornDevLogger,
     get_default_dev_handler,
     get_default_prod_handler,
@@ -27,7 +27,7 @@ class TestLogging(unittest.TestCase):
     def test_request_filter(self, mock_get_trace_id) -> None:
         trace_id = "0000000000000000"
         mock_get_trace_id.return_value = trace_id
-        filter = RequestFilter()
+        filter = RequestTraceIdFilter()
         record = logging.makeLogRecord({})
         self.assertTrue(filter.filter(record))
         self.assertEqual(trace_id, record.__dict__.get("trace_id"))
@@ -90,7 +90,7 @@ class TestLogging(unittest.TestCase):
         )
         rich_handler_instance.addFilter.assert_called_once()
         self.assertIsInstance(
-            rich_handler_instance.addFilter.call_args.args[0], RequestFilter
+            rich_handler_instance.addFilter.call_args.args[0], RequestTraceIdFilter
         )
 
     def test_default_prod_handler(self) -> None:
@@ -100,7 +100,7 @@ class TestLogging(unittest.TestCase):
         self.assertIs(result, get_default_prod_handler())
 
         self.assertIsInstance(result.formatter, JsonFormatter)
-        self.assertIsInstance(result.filters[0], RequestFilter)
+        self.assertIsInstance(result.filters[0], RequestTraceIdFilter)
 
     @patch("canonicalwebteam.flask_base.log_utils.get_flask_env")
     def test_is_debug_environment(self, mock_get_flask_env) -> None:

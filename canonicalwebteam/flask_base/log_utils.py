@@ -14,14 +14,11 @@ from canonicalwebteam.flask_base.env import get_flask_env
 from canonicalwebteam.flask_base.opentelemetry.tracing import get_trace_id
 
 
-DEFAULT_DEV_FORMAT = "[%(name)s] %(message)s"
-
-
 def _date_format_with_ms(dt: datetime.datetime) -> Text:
     return Text(dt.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3])
 
 
-class RequestFilter(logging.Filter):
+class RequestTraceIdFilter(logging.Filter):
     def filter(self, record: logging.LogRecord) -> bool:
         trace_id = get_trace_id()
         if trace_id:
@@ -95,10 +92,10 @@ def get_default_dev_handler() -> logging.Handler:
     )
     rich_handler.setFormatter(
         ExtraRichFormatter(
-            fmt=DEFAULT_DEV_FORMAT,
+            fmt="[%(name)s] %(message)s",
         )
     )
-    rich_handler.addFilter(RequestFilter())
+    rich_handler.addFilter(RequestTraceIdFilter())
     return rich_handler
 
 
@@ -112,13 +109,13 @@ def get_default_prod_handler() -> logging.Handler:
         # the order of the format string doesn't matter
         # it just needs to include the fields that you want in the output
         # this is just for the default LogRecord attributes
-        # for custom ones like "trace_id" check the RequestFilter class
+        # for custom ones like "trace_id" check the RequestTraceIdFilter class
         fmt="%(levelname)s:%(message)s",
         rename_fields={"levelname": "level"},
         timestamp=True,
     )
     log_handler.setFormatter(formatter)
-    log_handler.addFilter(RequestFilter())
+    log_handler.addFilter(RequestTraceIdFilter())
     return log_handler
 
 
