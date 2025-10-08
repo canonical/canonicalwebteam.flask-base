@@ -70,7 +70,7 @@ app = FlaskBase(..., handler=myHandler)
 
 ### Tracing
 
-If observability is enabled in the project then you can get the trace ID of a request using
+If tracing is enabled in the project then you can get the trace ID of a request using
 ```python
 from canonicalwebteam.flask_base.opentelemetry.tracing import get_trace_id
 trace_id = get_trace_id()
