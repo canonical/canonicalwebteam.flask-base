@@ -129,6 +129,7 @@ class TestTraces(unittest.TestCase):
             "REQUEST_METHOD": "GET",
             "PATH_INFO": "/test",
         }
+
         tracing.request_hook(self.mock_span, environ)
         self.mock_span.update_name.assert_called_once_with("GET /test")
 

@@ -18,7 +18,7 @@ if TRACING_ENABLED or TYPE_CHECKING or "unittest" in sys.modules.keys():
     from opentelemetry.context import attach, detach
     from opentelemetry.instrumentation.requests import RequestsInstrumentor
     from opentelemetry.instrumentation.flask import FlaskInstrumentor
-    from opentelemetry.trace import get_current_span, Span
+    from opentelemetry.trace import get_current_span
 
 
 # Traces will only work if properly set up
@@ -37,7 +37,7 @@ def get_trace_id():
     return None
 
 
-def request_hook(span: Span, environ):
+def request_hook(span, environ):
     if span and span.is_recording():
         span.update_name(f"{environ['REQUEST_METHOD']} {environ['PATH_INFO']}")
 
