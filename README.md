@@ -79,7 +79,7 @@ trace_id = get_trace_id()
 The trace ID will also be added by default to all the logs your application prints when it is
 available.
 
-Observability is enabled by default when setting up the appropriate relations for an application
+Tracing is enabled when setting up the [`tracing`](charmhub.io/integrations/tracing) relation for an application
 that uses [paas-charm](https://github.com/canonical/paas-charm/blob/main/src/paas_charm/templates/gunicorn.conf.py.j2).
 
 #### Configuring tracing
