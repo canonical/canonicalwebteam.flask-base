@@ -1,9 +1,12 @@
-from typing import Dict
-from contextlib import contextmanager
 import functools
 import logging
-from time import time
 import statsd
+from contextlib import contextmanager
+from time import time
+from typing import Dict
+
+from flask import Flask, g, request
+
 
 logger = logging.getLogger(__name__)
 
@@ -65,3 +68,44 @@ class RequestsMetrics:
     requests = Counter(name="wsgi_requests")
     latency = Histogram(name="wsgi_latency")
     errors = Counter(name="wsgi_errors")
+
+
+def register_metrics(app: Flask):
+    """
+    Register per route metrics for the Flask application.
+    This will track the number of requests, their latency, and errors.
+    """
+
+    @app.before_request
+    def start_timer():
+        g.start_time = time()
+
+    @app.after_request
+    def record_metrics(response):
+        duration_ms = (time() - g.get("start_time", time())) * 1000
+
+        labels = {
+            "view": request.endpoint or "unknown",
+            "method": request.method,
+            "status": str(response.status_code),
+        }
+
+        RequestsMetrics.requests.inc(1, **labels)
+        RequestsMetrics.latency.observe(duration_ms, **labels)
+
+        return response
+
+    @app.teardown_request
+    def handle_teardown(exception):
+        if exception:
+            # log 5xx errors
+            status_code = getattr(exception, "code", 500)
+
+            labels = {
+                "view": request.endpoint or "unknown",
+                "method": request.method,
+                "status": str(status_code),
+            }
+
+            if status_code >= 500:
+                RequestsMetrics.errors.inc(1, **labels)

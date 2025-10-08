@@ -30,6 +30,68 @@ For local development, it's best to test this module with one of our website pro
 
 ## Features
 
+### Logging
+
+Logging is divided in 2 types depending on the environment:
+- Prod: uses a simple structured logging, that outputs JSON so that logs are searchable in tools like Grafana.
+- Dev: uses the Rich package to output logs to the terminal with colors to make them easier to look at.
+
+The logging configuration is set in the root logger, so every logger that you generate like this
+```python
+import logging
+logger = logging.getLogger(__name__)
+```
+will use by default the handler set for the root logger and will be output properly. This includes logs in
+3rd party packages too.
+
+You can log custom JSON using the "extra" argument. Example:
+```python
+logger.error("This is a test log with extra arguments", extra={
+    "test": "I can add any JSON item",
+    "test2": "In this extra dictionary",
+    "number": 42,
+})
+```
+
+The Gunicorn loggers are set up in a way that they don't use the root logger. If you want to get the same type 
+of logs than the rest you need to execute your application passing the 'logger-class' attribute:
+```bash
+gunicorn webapp.app:app --logger-class canonicalwebteam.flask_base.log_utils.GunicornDevLogger ...
+```
+
+#### Configuring logging
+
+The logging defaults set are good for probably most of the cases and teams, but in case of specific needs 
+you can pass to FlaskBase a 'handler' object so that each project can configure logging to their liking. 
+The 'handler' has to be of type logging.Handler. Example:
+```python
+app = FlaskBase(..., handler=myHandler)
+```
+
+### Tracing
+
+If tracing is enabled in the project then you can get the trace ID of a request using
+```python
+from canonicalwebteam.flask_base.opentelemetry.tracing import get_trace_id
+trace_id = get_trace_id()
+```
+
+The trace ID will also be added by default to all the logs your application prints when it is
+available.
+
+Tracing is enabled when setting up the [`tracing`](charmhub.io/integrations/tracing) relation for an application
+that uses [paas-charm](https://github.com/canonical/paas-charm/blob/main/src/paas_charm/templates/gunicorn.conf.py.j2).
+
+#### Configuring tracing
+
+There is a parameter that has been added to FlaskBase constructor in order to exclude certain routes from
+being traced.
+```python
+app = FlaskBase(..., untraced_routes=["/demo"])
+```
+
+By default, just the "/_status" route is ignored.
+
 ### Per route metrics
 
 If a statsd-client is configured (which is enabled by default with 12f apps), FlaskBase will automatically add per route metrics. Including error counts, request counts, and response times.

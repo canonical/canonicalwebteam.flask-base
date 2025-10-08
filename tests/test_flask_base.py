@@ -2,7 +2,9 @@
 import os
 import unittest
 import warnings
+import logging
 from contextlib import contextmanager
+from unittest.mock import patch
 
 # Packages
 from werkzeug.debug import DebuggedApplication
@@ -10,6 +12,8 @@ from werkzeug.debug import DebuggedApplication
 # Local modules
 from canonicalwebteam.flask_base.app import FlaskBase
 from canonicalwebteam.flask_base.middlewares.proxy_fix import ProxyFix
+from canonicalwebteam.flask_base.middlewares.dev_log import DevLogWSGI
+from canonicalwebteam.flask_base.log_utils import get_default_prod_handler
 from tests.test_app.webapp.app import create_test_app
 
 
@@ -27,7 +31,7 @@ def cwd(path):
         os.chdir(oldpwd)
 
 
-class TestFlaskBase(unittest.TestCase):
+class TestFlaskBaseInit(unittest.TestCase):
     def create_app(self, debug=False):
         if debug:
             os.environ["FLASK_DEBUG"] = "true"
@@ -41,13 +45,92 @@ class TestFlaskBase(unittest.TestCase):
         self.assertEqual(app.service, "canonicalwebteam.flask-base")
 
     def test_debug_wsgi_app(self):
-        app = self.create_app(debug=True)
-        self.assertIsInstance(app.wsgi_app.app, DebuggedApplication)
+        with patch.object(
+            DevLogWSGI,
+            "__init__",
+            return_value=None,
+        ) as dev_log_mock:
+            with patch.object(
+                DebuggedApplication,
+                "__init__",
+                return_value=None,
+            ) as debug_mock:
+                self.create_app(debug=True)
+
+        dev_log_mock.assert_called_once()
+        debug_mock.assert_called_once()
 
     def test_wsgi_app(self):
         app = self.create_app()
         self.assertIsInstance(app.wsgi_app, ProxyFix)
 
+    def test_global_context(self):
+        app = self.create_app()
+        context_processors = app.template_context_processors[None]
+
+        # Flask adds it's own context_processor so we should have 2
+        self.assertEqual(len(context_processors), 2)
+
+        # We retrieve our base context from the second position
+        base_context = context_processors[1]()
+        assert isinstance(base_context, dict)
+        self.assertIn("now", base_context.keys())
+        self.assertIn("versioned_static", base_context.keys())
+
+    def test_loggers_prod(self):
+        with patch(
+            "canonicalwebteam.flask_base.app.setup_root_logger",
+        ) as setup_logger_mock:
+            app = self.create_app()
+            setup_logger_mock.assert_called_once_with(app, None)
+            gunicorn_error_log = logging.getLogger("gunicorn.error")
+            self.assertIn(
+                get_default_prod_handler(),
+                gunicorn_error_log.handlers,
+            )
+            gunicorn_access_log = logging.getLogger("gunicorn.access")
+            self.assertIn(
+                get_default_prod_handler(),
+                gunicorn_access_log.handlers,
+            )
+
+    def test_loggers_debug(self):
+        """
+        Debug mode is only active in local environments and the gunicorn
+        loggers can be modified through Gunicorn command line options.
+        That's why in this test they will just be set to their defaults.
+        """
+        with patch(
+            "canonicalwebteam.flask_base.app.setup_root_logger",
+        ) as setup_logger_mock:
+            app = self.create_app()
+            setup_logger_mock.assert_called_once_with(app, None)
+            gunicorn_error_log = logging.getLogger("gunicorn.error")
+            gunicorn_access_log = logging.getLogger("gunicorn.access")
+            self.assertEqual(1, len(gunicorn_error_log.handlers))
+            self.assertEqual(1, len(gunicorn_access_log.handlers))
+            self.assertIsInstance(
+                gunicorn_error_log.handlers[0],
+                logging.StreamHandler,
+            )
+            self.assertIsInstance(
+                gunicorn_access_log.handlers[0],
+                logging.StreamHandler,
+            )
+
+    def test_observability(self):
+        with patch(
+            "canonicalwebteam.flask_base.app.register_metrics",
+        ) as metrics_mock:
+            with patch(
+                "canonicalwebteam.flask_base.app.register_traces",
+            ) as traces_mock:
+                app = self.create_app()
+                metrics_mock.assert_called_once_with(app)
+                traces_mock.assert_called_once_with(app, ["/_status"])
+
+
+class TestFlaskBase(unittest.TestCase):
     def test_security_headers(self):
         with create_test_app().test_client() as client:
             response = client.get("page")
@@ -60,6 +143,7 @@ class TestFlaskBase(unittest.TestCase):
         with create_test_app().test_client() as client:
             cached_response = client.get("page")
             cache = cached_response.headers.get("Cache-Control")
+            assert cache is not None
             self.assertNotIn("public", cache)
             self.assertIn("max-age=60", cache)
             self.assertIn("stale-while-revalidate=86400", cache)
@@ -90,6 +174,7 @@ class TestFlaskBase(unittest.TestCase):
             # all 3 values are overriden, and "public" is added
             all_response = client.get("cache/all")
             all_cache = all_response.headers.get("Cache-Control")
+            assert all_cache is not None
             self.assertIn("public", all_cache)
             self.assertIn("max-age=4321", all_cache)
             self.assertIn("stale-while-revalidate=4321", all_cache)
@@ -98,6 +183,7 @@ class TestFlaskBase(unittest.TestCase):
             # all values are set to zero
             zero_response = client.get("cache/zero")
             zero_cache = zero_response.headers.get("Cache-Control")
+            assert zero_cache is not None
             self.assertIn("max-age=0", zero_cache)
             self.assertIn("stale-while-revalidate=0", zero_cache)
             self.assertIn("stale-if-error=0", zero_cache)
@@ -105,6 +191,7 @@ class TestFlaskBase(unittest.TestCase):
             # only max-age is overridden, so the "stale" instructions remain
             max_age_response = client.get("cache/max-age")
             max_age_cache = max_age_response.headers.get("Cache-Control")
+            assert max_age_cache is not None
             self.assertNotIn("public", max_age_cache)
             self.assertIn("max-age=4321", max_age_cache)
             self.assertIn("stale-while-revalidate=86400", max_age_cache)
@@ -113,6 +200,7 @@ class TestFlaskBase(unittest.TestCase):
             # only "stale-while-revalidate" is overridden
             stale_response = client.get("cache/stale")
             stale_cache = stale_response.headers.get("Cache-Control")
+            assert stale_cache is not None
             self.assertNotIn("public", stale_cache)
             self.assertIn("max-age=60", stale_cache)
             self.assertIn("stale-while-revalidate=4321", stale_cache)
@@ -149,19 +237,6 @@ class TestFlaskBase(unittest.TestCase):
             deleted_response = client.get("deleted")
             self.assertEqual(410, deleted_response.status_code)
             self.assertEqual(deleted_response.data, b"Deleted")
-
-    def test_global_context(self):
-        app = self.create_app()
-        context_processors = app.template_context_processors[None]
-
-        # Flask adds it's own context_processor so we should have 2
-        self.assertEqual(len(context_processors), 2)
-
-        # We retrieve our base context from the second position
-        base_context = context_processors[1]()
-
-        self.assertIn("now", base_context.keys())
-        self.assertIn("versioned_static", base_context.keys())
 
     def test_favicon_redirect(self):
         """
@@ -264,7 +339,9 @@ class TestFlaskBase(unittest.TestCase):
             plain_cache = plain_response.headers.get("Cache-Control")
 
             self.assertEqual(plain_response.status_code, 200)
+            assert plain_response.json is not None
             self.assertEqual(plain_response.json["fish"], "chips")
+            assert plain_cache is not None
             self.assertIn("public", plain_cache)
 
             max_age = flask_app.config["SEND_FILE_MAX_AGE_DEFAULT"]
@@ -277,7 +354,9 @@ class TestFlaskBase(unittest.TestCase):
             hash_response = client.get("static/test.json?v=527d233")
             hash_cache = hash_response.headers.get("Cache-Control")
             self.assertEqual(hash_response.status_code, 200)
+            assert hash_response.json is not None
             self.assertEqual(hash_response.json["fish"], "chips")
+            assert hash_cache is not None
             self.assertIn("public", hash_cache)
             self.assertIn("max-age=31536000", hash_cache)
 

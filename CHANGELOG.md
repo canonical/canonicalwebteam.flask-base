@@ -1,3 +1,25 @@
+# 3.1.0 (2025-09-24)
+
+- Add prettified logs to Development mode.
+- Add JSON structured logs to Production mode.
+- The logging "extra" argument can be used to print JSON data out into the logs.
+- Custom parameter "handler" of type logging.Handler can be passed to FlaskBase to personalize log output.
+- Traces added to logs if tracing is enabled (through paas-charm).
+- Custom parameter "untraced_routes" to mark routes for which tracing should not be enabled.
+
+## Upgrade notes
+
+For the production mode to output JSON structured logs you don't need to do anything, as it comes out of the box.
+Be aware that you can now pass parameters to the logging method with the "extra" argument and anything you pass
+will appear in the structured JSON log.
+
+For the development prettified logs there is one step to be done.
+Update your gunicorn entrypoint to add `--logger-class canonicalwebteam.flask_base.log_utils.GunicornDevLogger`
+if you are in DEBUG mode.
+
+One can pass a custom logging.Handler to FlaskBase in order to personalize the output of the logs.
+All the work of setting the handler in all the appropriate places is done by FlaskBase.
+
 # 3.0.0 (2025-08-01)
 
 - Update to use the latest version of Flask, Werkzeug, gunicorn and gevent.

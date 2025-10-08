@@ -1,12 +1,10 @@
 # Standard library
 import hashlib
-import time
 import os
 import logging
 
 # Packages
 import flask
-from flask import Flask, g, request
 from flask_compress import Compress
 from werkzeug.debug import DebuggedApplication
 
@@ -20,14 +18,19 @@ from canonicalwebteam.flask_base.env import (
     get_flask_env,
     load_plain_env_variables,
 )
+from canonicalwebteam.flask_base.log_utils import (
+    setup_root_logger,
+    get_default_prod_handler,
+    is_debug_environment,
+)
+from canonicalwebteam.flask_base.middlewares.dev_log import DevLogWSGI
 from canonicalwebteam.flask_base.middlewares.proxy_fix import ProxyFix
+from canonicalwebteam.flask_base.opentelemetry.tracing import register_traces
+from canonicalwebteam.flask_base.opentelemetry.metrics import register_metrics
 from canonicalwebteam.yaml_responses.flask_helpers import (
     prepare_deleted,
     prepare_redirects,
 )
-from canonicalwebteam.flask_base.metrics import RequestsMetrics
-
-logger = logging.getLogger(__name__)
 
 
 def set_security_headers(response):
@@ -167,47 +170,6 @@ def set_compression_types(app):
     compress.init_app(app)
 
 
-def register_metrics(app: Flask):
-    """
-    Register per route metrics for the Flask application.
-    This will track the number of requests, their latency, and errors.
-    """
-
-    @app.before_request
-    def start_timer():
-        g.start_time = time.time()
-
-    @app.after_request
-    def record_metrics(response):
-        duration_ms = (time.time() - g.get("start_time", time.time())) * 1000
-
-        labels = {
-            "view": request.endpoint or "unknown",
-            "method": request.method,
-            "status": str(response.status_code),
-        }
-
-        RequestsMetrics.requests.inc(1, **labels)
-        RequestsMetrics.latency.observe(duration_ms, **labels)
-
-        return response
-
-    @app.teardown_request
-    def handle_teardown(exception):
-        if exception:
-            # log 5xx errors
-            status_code = getattr(exception, "code", 500)
-
-            labels = {
-                "view": request.endpoint or "unknown",
-                "method": request.method,
-                "status": str(status_code),
-            }
-
-            if status_code >= 500:
-                RequestsMetrics.errors.inc(1, **labels)
-
-
 class FlaskBase(flask.Flask):
     def send_static_file(self, filename: str) -> "flask.wrappers.Response":
         """
@@ -244,6 +206,24 @@ class FlaskBase(flask.Flask):
         # Now return the static file response
         return response
 
+    def configure_logging(self, handler: logging.Handler | None = None):
+        setup_root_logger(self, handler)
+
+        # this method should be called before initializing the class, so we
+        # don't have access to self.debug class variable yet
+        if not is_debug_environment():
+            # production mode, so we need to replace the handlers of gunicorn
+            gunicorn_error_log = logging.getLogger("gunicorn.error")
+            gunicorn_error_log.handlers.clear()
+            gunicorn_error_log.addHandler(
+                handler or get_default_prod_handler()
+            )
+            gunicorn_access_log = logging.getLogger("gunicorn.access")
+            gunicorn_access_log.handlers.clear()
+            gunicorn_access_log.addHandler(
+                handler or get_default_prod_handler()
+            )
+
     def __init__(
         self,
         name,
@@ -251,10 +231,14 @@ class FlaskBase(flask.Flask):
         favicon_url=None,
         template_404=None,
         template_500=None,
+        handler=None,
+        untraced_routes=["/_status"],
         *args,
         **kwargs,
     ):
         super().__init__(name, *args, **kwargs)
+
+        self.configure_logging(handler)
 
         self.service = service
 
@@ -270,12 +254,14 @@ class FlaskBase(flask.Flask):
         self.url_map.converters["regex"] = RegexConverter
 
         if self.debug:
+            # needed to get pretty traces from Werkzeug, which writes directly
+            # to the error stream without using logging
+            self.wsgi_app = DevLogWSGI(self.wsgi_app)
             self.wsgi_app = DebuggedApplication(self.wsgi_app)
 
         self.wsgi_app = ProxyFix(self.wsgi_app)
 
         self.before_request(clear_trailing_slash)
-
         self.before_request(
             prepare_redirects(
                 path=os.path.join(self.root_path, "..", "redirects.yaml")
@@ -339,7 +325,7 @@ class FlaskBase(flask.Flask):
         if os.path.isfile(favicon_path):
 
             @self.route("/favicon.ico")
-            def favicon():
+            def favicon():  # type: ignore
                 return flask.send_file(
                     favicon_path, mimetype="image/vnd.microsoft.icon"
                 )
@@ -374,3 +360,4 @@ class FlaskBase(flask.Flask):
 
         set_compression_types(self)
         register_metrics(self)
+        register_traces(self, untraced_routes)

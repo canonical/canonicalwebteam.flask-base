@@ -77,4 +77,8 @@ def create_test_app():
     def error_route():
         flask.abort(500)
 
+    @app.route("/exception")
+    def exception_route():
+        raise Exception
+
     return app

@@ -4,7 +4,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="canonicalwebteam.flask-base",
-    version="3.0.0",
+    version="3.1.0",
     description=(
         "Flask extension that applies common configurations"
         "to all of webteam's flask apps."
@@ -34,6 +34,17 @@ setup(
         "gevent",
         "statsd",
         "flask-compress==1.17",
+        "rich",
+        "python-json-logger",
+        # Observability
+        "opentelemetry-api",
+        "opentelemetry-exporter-otlp",
+        "opentelemetry-exporter-otlp-proto-http",
+        "opentelemetry-instrumentation",
+        "opentelemetry-instrumentation-wsgi",
+        "opentelemetry-instrumentation-flask",
+        "opentelemetry-instrumentation-requests",
+        "opentelemetry-sdk",
     ],
     dependency_links=[],
     include_package_data=True,

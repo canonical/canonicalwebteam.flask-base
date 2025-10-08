@@ -18,7 +18,7 @@ def versioned_static(filename):
     Given the path for a static file, output a url path
     with a hex hash as a query string for versioning
     """
-    static_path = current_app.static_folder
+    static_path = f"{current_app.static_folder}"
     static_url = current_app.static_url_path
 
     file_path = os.path.join(static_path, filename)
