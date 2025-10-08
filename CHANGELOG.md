@@ -1,3 +1,7 @@
+# 3.1.1 (2025-10-08)
+
+Add missing init file to fix the bug of missing opentelemetry module.
+
 # 3.1.0 (2025-09-24)
 
 - Add prettified logs to Development mode.
