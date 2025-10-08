@@ -33,7 +33,7 @@ setup(
         "gunicorn",
         "gevent",
         "statsd",
-        "flask-compress==1.17",
+        "flask-compress==1.18",
         "rich",
         "python-json-logger",
         # Observability
