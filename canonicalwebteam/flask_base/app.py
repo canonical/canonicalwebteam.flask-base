@@ -25,6 +25,7 @@ from canonicalwebteam.flask_base.log_utils import (
 )
 from canonicalwebteam.flask_base.middlewares.dev_log import DevLogWSGI
 from canonicalwebteam.flask_base.middlewares.proxy_fix import ProxyFix
+from canonicalwebteam.flask_base.middlewares.utm_redirect import add_utm_params_to_redirect
 from canonicalwebteam.flask_base.opentelemetry.tracing import register_traces
 from canonicalwebteam.flask_base.opentelemetry.metrics import register_metrics
 from canonicalwebteam.yaml_responses.flask_helpers import (
@@ -281,6 +282,7 @@ class FlaskBase(flask.Flask):
             )
         )
 
+        self.after_request(add_utm_params_to_redirect)
         self.after_request(set_security_headers)
         self.after_request(set_cache_control_headers)
         self.after_request(set_permissions_policy_headers)
