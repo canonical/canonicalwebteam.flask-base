@@ -1,3 +1,7 @@
+# 3.1.2 (2026-03-06)
+
+Do not serve cached response from `/_cookies` endpoints. This is required for cross-domain cookies to function correctly.
+
 # 3.1.1 (2025-10-08)
 
 Add missing init file to fix the bug of missing opentelemetry module.
