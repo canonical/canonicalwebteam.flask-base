@@ -1,3 +1,17 @@
+# 3.2.0 (2026-06-09)
+
+The `/_status/check` endpoint now returns a JSON response instead of a plain string:
+
+```json
+{"status": "OK", "fqdn": "concordia.canonical.com"}
+```
+
+The `fqdn` key reflects the `service` argument passed to `FlaskBase()`. If `service` was not provided or is falsy, the `fqdn` key is omitted and only `{"status": "OK"}` is returned.
+
+## Upgrade notes
+
+If you have any client code that checks the response body of `/_status/check` for the literal string `"OK"`, update it to parse JSON and read `response["status"]` instead. Clients that rely solely on the HTTP status code (200) are unaffected.
+
 # 3.1.2 (2026-03-06)
 
 Do not serve cached response from `/_cookies` endpoints. This is required for cross-domain cookies to function correctly.

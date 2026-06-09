@@ -322,7 +322,10 @@ class FlaskBase(flask.Flask):
         # Default routes
         @self.route("/_status/check")
         def status_check():
-            return flask.jsonify({"status": "OK", "fqdn": self.service})
+            response = {"status": "OK"}
+            if self.service:
+                response["fqdn"] = self.service
+            return flask.jsonify(response)
 
         favicon_path = os.path.join(self.root_path, "../static", "favicon.ico")
         if os.path.isfile(favicon_path):
